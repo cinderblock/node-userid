@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "echo",
+      "type": "shell",
+      "command": "echo ${input:napi-include}"
+    },
+    {
+      "label": "includes",
+      "type": "shell",
+      "command": "node scripts/includes.mjs"
+    }
+  ],
+  "inputs": [
+    {
+      "type": "command",
+      "command": "workbench.action.tasks.runTask",
+      "id": "napi-include",
+      "args": ["includes"]
+    },
+    {
+      "type": "command",
+      "command": "workbench.action.tasks.runTask",
+      "id": "node_api-include",
+      "args": "node_api.h"
+    }
+  ]
+}

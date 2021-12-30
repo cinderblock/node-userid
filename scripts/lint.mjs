@@ -1,22 +1,19 @@
 import { spawn } from 'child_process';
-import { platform } from 'os';
+import { writeFile } from 'fs/promises';
+import { includes } from './includes.mjs';
 
-const gyp = 'node-gyp';
+if (require.main !== module) {
+  throw new Error('Cannot be used as a module');
+}
 
-// TODO: Find a better way to find <node_api.h>
-const cachePath =
-  platform() === 'win32'
-    ? `${process.env['LocalAppData'.toUpperCase()]}/${gyp}/Cache`
-    : `${process.env.HOME}/.cache/${gyp}`;
+// writeFile('tidy.log', 'Hello World!\n', { flag: 'a' }).catch(console.error);
 
-const includes = [
-  'node_modules/node-addon-api', // napi.h
-  `${cachePath}/${process.version.slice(1)}/include/node`, // node_api.h
-];
+const args = [...includes.values().map(i => `--extra-arg=-I${i}`), ...process.argv.slice(2)];
 
-const args = [...includes.map(i => `--extra-arg=-I${i}`), ...process.argv.slice(2)];
+// console.log('> clang-tidy', args);
 
-console.log('> clang-tidy', args);
+// append args to log file tidy.log
+writeFile('tidy.log', args.join('\n') + '\n', { flag: 'a' }).catch(console.error);
 
 const exec = spawn('clang-tidy', args, { stdio: 'inherit' });
 
