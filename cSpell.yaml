@@ -2,9 +2,9 @@ version: 0.2,
 language: en,
 ignorePaths:
   - '**/node_modules/**'
-  - '/build/**'
-  - '/coverage/**'
-  - '/.nyc_output/**'
+  - 'build/**'
+  - 'coverage/**'
+  - '.nyc_output/**'
   - '**/package-lock.json'
   - .vscode/extensions.json
   - '**.svg'
