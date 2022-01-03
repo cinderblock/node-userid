@@ -11,7 +11,6 @@
     "type": "git",
     "url": "https://github.com/cinderblock/node-userid.git"
   },
-  "type": "module",
   "main": "src/userid.cjs",
   "types": "src/userid.d.ts",
   "files": [
