@@ -66,7 +66,7 @@ auto userid::Gids(const CallbackInfo &info) -> Array {
 
   do {
     // Grow the vector to fit our current guess
-    groups.reserve(static_cast<unsigned>(numGroupsGuess));
+    groups.resize(static_cast<unsigned>(numGroupsGuess));
 
     foundGroups = getgrouplist(name, defaultGroup, groups.data(), &numGroupsGuess);
   } while (foundGroups == -1);
