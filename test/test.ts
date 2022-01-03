@@ -127,6 +127,6 @@ describe('userid', () => {
     // TODO: test for a long username
     // TODO: test for a long groupname in returned list
 
-    itShouldHandleErrorsConsistently(userid.gids, 'string', 'user', 'getpwnam');
+    itShouldHandleErrorsConsistently(userid.gids, 'string', 'user', 'username not found');
   });
 });
