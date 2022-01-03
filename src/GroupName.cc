@@ -39,8 +39,6 @@ auto userid::GroupName(const CallbackInfo &info) -> String {
       throw Error::New(env, "getgrgid_r returned unexpected result");
     }
 
-    break;
+    return String::New(env, grp.gr_name);
   }
-
-  return String::New(env, grp.gr_name);
 }

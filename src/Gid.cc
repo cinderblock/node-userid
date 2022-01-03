@@ -40,8 +40,6 @@ auto userid::Gid(const CallbackInfo &info) -> Number {
       throw Error::New(env, "getgrnam_r returned unexpected result");
     }
 
-    break;
+    return Number::New(env, grp.gr_gid);
   }
-
-  return Number::New(env, grp.gr_gid);
 }

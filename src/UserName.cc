@@ -39,8 +39,6 @@ auto userid::UserName(const CallbackInfo &info) -> String {
       throw Error::New(env, "getpwuid_r returned unexpected result");
     }
 
-    break;
+    return String::New(env, pwd.pw_name);
   }
-
-  return String::New(env, pwd.pw_name);
 }

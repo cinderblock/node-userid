@@ -42,15 +42,13 @@ auto userid::Ids(const CallbackInfo &info) -> Object {
       throw Error::New(env, "getpwnam_r returned unexpected result");
     }
 
-    break;
+    auto ret = Object::New(env);
+
+    ret["uid"] = Number::New(env, pwd.pw_uid);
+    ret["gid"] = Number::New(env, pwd.pw_gid);
+
+    return ret;
   }
-
-  auto ret = Object::New(env);
-
-  ret["uid"] = Number::New(env, pwd.pw_uid);
-  ret["gid"] = Number::New(env, pwd.pw_gid);
-
-  return ret;
 }
 
 // cSpell:ignore NOLINT
