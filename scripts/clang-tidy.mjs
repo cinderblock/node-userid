@@ -16,7 +16,7 @@ const includes = [
 
 const args = [...includes.map(i => `--extra-arg=-I${i}`), ...process.argv.slice(2)];
 
-console.log('> clang-tidy', args);
+// console.log('> clang-tidy', args);
 
 const exec = spawn('clang-tidy', args, { stdio: 'inherit' });
 
@@ -26,11 +26,5 @@ exec.on('exit', code => {
 
 exec.on('error', e => {
   process.exitCode = 1;
-
-  if (e.code === 'ENOENT') {
-    console.error('Error: clang-tidy not found on PATH. Please install LLVM.');
-    return;
-  }
-
-  console.error(e);
+  console.error(e.code === 'ENOENT' ? 'Error: clang-tidy not found on PATH. Please install LLVM.' : e);
 });

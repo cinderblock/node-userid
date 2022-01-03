@@ -12,6 +12,6 @@
     ".clang-tidy": "yaml"
   },
   "clang-tidy.fixOnSave": true,
-  "clang-tidy.executable": "node scripts/lint.mjs",
-  "clang-tidy.buildPath": "build/Release"
+  "clang-tidy.executable": "node",
+  "clang-tidy.extraArgs": ["scripts/clang-tidy.mjs"]
 }

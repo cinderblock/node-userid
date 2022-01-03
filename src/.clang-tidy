@@ -1,15 +1,14 @@
 Checks: '*,-llvm-header-guard,-llvmlibc-*,-altera-*,-fuchsia-*,fuchsia-multiple-inheritance,fuchsia-statically-constructed-objects,fuchsia-virtual-inheritance'
 WarningsAsErrors: true
-HeaderFilterRegex: userid\.h
 FormatStyle: LLVM
 CheckOptions:
   - key: google-readability-namespace-comments.ShortNamespaceLines
-    value: '10'
+    value: 10
   - key: cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField
     value: true
   - key: cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
-    value: 'true'
+    value: true
   - key: cert-dcl16-c.NewSuffixes
-    value: 'L;LL;LU;LLU'
+    value: L;LL;LU;LLU
   - key: google-readability-braces-around-statements.ShortStatementLines
-    value: '1'
+    value: 1
