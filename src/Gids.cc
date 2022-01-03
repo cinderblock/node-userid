@@ -78,7 +78,7 @@ auto userid::Gids(const CallbackInfo &info) -> Array {
   // return Napi::TypedArray::New(env, groups);
 
   auto ret = Array::New(env, groups.size());
-  for (int i = 0; i < groups.size(); i++) {
+  for (unsigned i = 0; i < groups.size(); i++) {
     ret[i] = Number::New(env, groups[i]);
   }
   return ret;
