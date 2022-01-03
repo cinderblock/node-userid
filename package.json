@@ -11,6 +11,7 @@
     "type": "git",
     "url": "https://github.com/cinderblock/node-userid.git"
   },
+  "type": "module",
   "main": "src/userid.cjs",
   "types": "src/userid.d.ts",
   "files": [
@@ -33,7 +34,7 @@
     "node": ">=8.4.0"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "cross-env TS_NODE_PROJECT='./test/tsconfig.json' mocha",
     "prettier": "prettier \"**\" --check",
     "spelling": "cspell \"**\"",
     "lint-c": "node scripts/clang-tidy.mjs src/sources.cc",
@@ -54,6 +55,7 @@
     "@types/node": "^17.0.6",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
+    "cross-env": "^7.0.3",
     "cspell": "^5.14.0",
     "eslint": "^8.6.0",
     "eslint-config-prettier": "^8.3.0",

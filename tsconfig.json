@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "es2020",
 
-    "lib": ["es2020"],
-    "types": ["mocha", "node"],
+    "lib": ["es2020", "dom"],
+    "types": ["node"],
 
     "moduleResolution": "node",
 
