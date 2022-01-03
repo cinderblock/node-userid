@@ -14,7 +14,9 @@ const includes = [
   `${cachePath}/${process.version.slice(1)}/include/node`, // node_api.h
 ];
 
-const args = [...includes.map(i => `--extra-arg=-I${i}`), ...process.argv.slice(2)];
+const compilerArgs = ['-D__CLANG_TIDY__', ...includes.map(i => `-I${i}`)];
+
+const args = [...compilerArgs.map(i => `--extra-arg=${i}`), ...process.argv.slice(2)];
 
 // console.log('> clang-tidy', args);
 
