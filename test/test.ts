@@ -7,10 +7,12 @@ import * as types from '../src/userid';
 
 const importPath = process.env.TEST_IMPORT_OVERRIDE || '../src/userid.cjs';
 
-const userid = (await import(importPath).catch(e => {
-  console.error(e);
-  throw e;
-})) as typeof types;
+const userid = (
+  await import(importPath).catch(e => {
+    console.error(e);
+    throw e;
+  })
+).default as typeof types;
 
 // Simply test against current user's info
 
