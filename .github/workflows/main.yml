@@ -29,7 +29,7 @@ jobs:
       # Prepare Test Environment
 
       - name: Create Dummy Package.json
-        run: echo \{\} > test/package.json
+        run: echo '{"type":"module"}' > test/package.json
 
       - name: Install Current Version as Git Dependency
         working-directory: test
