@@ -122,9 +122,10 @@ describe('userid', () => {
   });
 
   describe('method userid.gids', () => {
-    const shellGidsSorted = shellGids.sort((a, b) => a - b);
+    const sort = (a: number, b: number) => a - b;
+    const shellGidsSorted = shellGids.sort(sort);
     it(`should load a list of gids [${shellGidsSorted}] by username [${shellUsername}]`, () => {
-      userid.gids(shellUsername).sort().should.deepEqual(shellGidsSorted);
+      userid.gids(shellUsername).sort(sort).should.deepEqual(shellGidsSorted);
     });
 
     // TODO: test for a long username
