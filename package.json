@@ -14,16 +14,16 @@
   "main": "src/userid.cjs",
   "types": "src/userid.d.ts",
   "files": [
-    "src/userid.cjs",
-    "src/userid.d.ts",
-    "src/userid.hh",
-    "src/userid.cc",
+    "src/userid.{d.ts,hh,cc}",
     "src/sources.cc",
     "src/Ids.cc",
     "src/Gid.cc",
     "src/Gids.cc",
     "src/UserName.cc",
     "src/GroupName.cc",
+    "src/lib/BufferSize.{cc,hh}",
+    "src/lib/Error.{cc,hh}",
+    "src/lib/FunctionArg.{cc,hh}",
     "binding.gyp"
   ],
   "os": [
