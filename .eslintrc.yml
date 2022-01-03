@@ -1,0 +1,15 @@
+root: true
+extends:
+  - eslint:recommended
+  - prettier
+env:
+  node: true
+parserOptions:
+  sourceType: module
+  ecmaVersion: 2020
+rules:
+  no-var: warn
+  object-shorthand: error
+  prefer-arrow-callback: error
+  prefer-const: error
+  prefer-template: error

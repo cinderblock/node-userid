@@ -1,0 +1,8 @@
+extends:
+  - 'plugin:@typescript-eslint/recommended'
+plugins:
+  - mocha
+  - '@typescript-eslint'
+parser: '@typescript-eslint/parser'
+env:
+  mocha: true

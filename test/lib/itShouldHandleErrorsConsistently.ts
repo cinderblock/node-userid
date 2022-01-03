@@ -15,7 +15,8 @@ export const nonExistentUserGroup = process.env.NONEXISTENT_NAME ?? '';
  * @param {Object} options Extra options
  */
 export function itShouldHandleErrorsConsistently(
-  test: (...args: any[]) => any,
+  test: (...args: never[]) => void,
+  // TODO: Use automatic/generic typing to determine this automatically
   argumentType: 'string' | 'number',
   missingMessage: string,
   errorMessage: string,
@@ -24,18 +25,18 @@ export function itShouldHandleErrorsConsistently(
     missingValue?: number | string;
   } = {},
 ) {
-  const badValue = options.badValue ?? argumentType == 'string' ? 0 : 'not a number';
-  const missingValue = options.missingValue ?? argumentType == 'string' ? nonExistentUserGroup : nonExistentUidGid;
+  const badValue = options.badValue ?? argumentType === 'string' ? 0 : 'not a number';
+  const missingValue = options.missingValue ?? argumentType === 'string' ? nonExistentUserGroup : nonExistentUidGid;
 
   it('should throw with too few arguments', () => {
     (() => test()).should.throw('Wrong number of arguments');
   });
 
   it(`should throw with the wrong type of argument. Expects ${argumentType}, giving ${typeof badValue} [${badValue}].`, () => {
-    (() => test(badValue)).should.throw(`Argument must be a ${argumentType}`);
+    (() => test(badValue as never)).should.throw(`Argument must be a ${argumentType}`);
   });
 
   it(`should throw when ${missingMessage} [${missingValue}] can't be found`, () => {
-    (() => test(missingValue)).should.throw(errorMessage);
+    (() => test(missingValue as never)).should.throw(errorMessage);
   });
 }

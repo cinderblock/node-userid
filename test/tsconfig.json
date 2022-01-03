@@ -1,10 +1,13 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
+    "module": "ES2020",
     "declaration": false,
     "sourceMap": false,
-    "noEmit": true,
+
+    "lib": ["es2020"],
+
+    "moduleResolution": "node",
 
     /* Strict Type-Checking Options */
     "strict": true,
@@ -23,9 +26,10 @@
 
     /* Module Resolution Options */
 
+    "types": ["mocha", "node"],
+
     "esModuleInterop": true,
 
-    "skipLibCheck": false,
     "forceConsistentCasingInFileNames": true
   }
 }
