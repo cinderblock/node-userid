@@ -1,61 +1,56 @@
 // This code is PUBLIC DOMAIN, and is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
+#include "lib/BufferSize.hh"
+#include "lib/Error.hh"
+#include "lib/FunctionArg.hh"
 #include "userid.hh"
+#include <cstring>
 
 #if !defined(_WIN32)
 #include <pwd.h>
 #else
-// Mocks for Windows
-
-using uid_t = uint32_t;
-using gid_t = uint32_t;
-struct passwd {
-  char *pw_name;   /* username */
-  char *pw_passwd; /* user password */
-  uid_t pw_uid;    /* user ID */
-  gid_t pw_gid;    /* group ID */
-  char *pw_gecos;  /* user information */
-  char *pw_dir;    /* home directory */
-  char *pw_shell;  /* shell program */
-};
-
-/**
- * The getpwnam() function returns a pointer to a structure containing
- * the broken-out fields of the record in the password database (e.g.,
- * the local password file /etc/passwd, NIS, and LDAP) that matches the
- * username name.
- */
-auto getpwnam(const char *name) -> struct passwd *;
+#include "lib/WindowsMocks.hh"
 #endif
 
 using Napi::CallbackInfo;
 using Napi::Error;
+using Napi::Number;
 using Napi::Object;
-using Napi::TypeError;
 
 auto userid::Ids(const CallbackInfo &info) -> Object {
   const auto env = info.Env();
+  const auto username = getArg<std::string>(info);
+  const auto *const name = username.c_str();
 
-  if (info.Length() < 1) {
-    throw TypeError::New(env, "Wrong number of arguments");
-  }
+  passwd pwd{};
+  std::vector<char> buffer(BufferSize::pwd());
 
-  if (!info[0].IsString()) {
-    throw TypeError::New(env, "Argument must be a string");
-  }
+  while (true) {
+    decltype(pwd) *result = nullptr;
 
-  const auto name = std::string(info[0].As<String>());
-  const auto *const user = getpwnam(name.c_str());
+    const auto errCode = getpwnam_r(name, &pwd, buffer.data(), buffer.size(), &result);
 
-  if (user == nullptr) {
-    throw Error::New(env, "username not found");
+    if (errCode == ERANGE) {
+      buffer.reserve(buffer.size() * 2);
+      continue;
+    }
+
+    checkError(env, result, errCode, "username not found");
+
+    if (result != &pwd) {
+      throw Error::New(env, "getpwnam_r returned unexpected result");
+    }
+
+    break;
   }
 
   auto ret = Object::New(env);
 
-  ret["uid"] = Number::New(env, user->pw_uid);
-  ret["gid"] = Number::New(env, user->pw_gid);
+  ret["uid"] = Number::New(env, pwd.pw_uid);
+  ret["gid"] = Number::New(env, pwd.pw_gid);
 
   return ret;
 }
+
+// cSpell:ignore NOLINT

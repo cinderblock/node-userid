@@ -6,15 +6,11 @@
 #include <napi.h>
 
 namespace userid {
-using Napi::Array;
 using Napi::CallbackInfo;
-using Napi::Number;
-using Napi::Object;
-using Napi::String;
 
-auto GroupName(const CallbackInfo &info) -> String;
-auto Gids(const CallbackInfo &info) -> Array;
-auto Gid(const CallbackInfo &info) -> Number;
-auto UserName(const CallbackInfo &info) -> String;
-auto Ids(const CallbackInfo &info) -> Object;
+auto GroupName(const CallbackInfo &info) -> Napi::String;
+auto Gids(const CallbackInfo &info) -> Napi::Array;
+auto Gid(const CallbackInfo &info) -> Napi::Number;
+auto UserName(const CallbackInfo &info) -> Napi::String;
+auto Ids(const CallbackInfo &info) -> Napi::Object;
 } // namespace userid

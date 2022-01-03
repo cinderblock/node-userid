@@ -1,62 +1,46 @@
 // This code is PUBLIC DOMAIN, and is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
+#include "lib/BufferSize.hh"
+#include "lib/Error.hh"
+#include "lib/FunctionArg.hh"
 #include "userid.hh"
 
 #if !defined(_WIN32)
 #include <grp.h>
 #else
-// Mocks for Windows
-
-using gid_t = uint32_t;
-struct group {
-  /**
-   * group name
-   **/
-  char *gr_name;
-  /**
-   * group password
-   **/
-  char *gr_passwd;
-  /**
-   * group ID
-   **/
-  gid_t gr_gid;
-  /**
-   * NULL-terminated array of pointers to names of group members
-   **/
-  char **gr_mem;
-};
-
-/**
- * The getgrgid() function shall search the group database for an entry with a matching gid.
- */
-auto getgrgid(gid_t gid) -> struct group *;
+#include "lib/WindowsMocks.hh"
 #endif
 
 using Napi::CallbackInfo;
 using Napi::Error;
 using Napi::String;
-using Napi::TypeError;
 
 auto userid::GroupName(const CallbackInfo &info) -> String {
   const auto env = info.Env();
+  const int gid = getArg<int32_t>(info);
 
-  if (info.Length() < 1) {
-    throw TypeError::New(env, "Wrong number of arguments");
+  group grp{};
+  std::vector<char> buffer(BufferSize::grp());
+
+  while (true) {
+    decltype(grp) *result = nullptr;
+
+    const auto errCode = getgrgid_r(gid, &grp, buffer.data(), buffer.size(), &result);
+
+    if (errCode == ERANGE) {
+      buffer.reserve(buffer.size() * 2);
+      continue;
+    }
+
+    checkError(env, result, errCode, "gid not found");
+
+    if (result != &grp) {
+      throw Error::New(env, "getgrgid_r returned unexpected result");
+    }
+
+    break;
   }
 
-  if (!info[0].IsNumber()) {
-    throw TypeError::New(env, "Argument must be a number");
-  }
-
-  const int gid = info[0].As<Number>().Int32Value();
-
-  const auto *const group = getgrgid(gid);
-
-  if (group == nullptr) {
-    throw Error::New(env, "gid not found");
-  }
-
-  return String::New(env, group->gr_name);
+  return String::New(env, grp.gr_name);
 }

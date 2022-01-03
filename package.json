@@ -36,7 +36,7 @@
     "test": "mocha",
     "prettier": "prettier \"**\" --check",
     "spelling": "cspell \"**\"",
-    "lint-c": "node scripts/clang-tidy.mjs src/*.cc src/*.hh",
+    "lint-c": "node scripts/clang-tidy.mjs src/*.cc src/*.hh src/lib/*.cc src/lib/*.hh",
     "lint-ts": "eslint \"**\"",
     "lint": "npm run lint-c && npm run lint-ts",
     "coverage": "nyc --reporter=lcov --reporter=text npm test",

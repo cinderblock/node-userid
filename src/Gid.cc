@@ -1,66 +1,47 @@
 // This code is PUBLIC DOMAIN, and is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND.
 
+#include "lib/BufferSize.hh"
+#include "lib/Error.hh"
+#include "lib/FunctionArg.hh"
 #include "userid.hh"
 
 #if !defined(_WIN32)
 #include <grp.h>
 #else
-// Mocks for Windows
-
-using gid_t = uint32_t;
-struct group {
-  /**
-   * group name
-   **/
-  char *gr_name;
-  /**
-   * group password
-   **/
-  char *gr_passwd;
-  /**
-   * group ID
-   **/
-  gid_t gr_gid;
-  /**
-   * NULL-terminated array of pointers to names of group members
-   **/
-  char **gr_mem;
-};
-
-/**
- * The getgrnam() function returns a pointer to a structure containing
- * the broken-out fields of the record in the group database (e.g., the
- * local group file /etc/group, NIS, and LDAP) that matches the group
- * name name.
- */
-auto getgrnam(const char *name) -> struct group *;
+#include "lib/WindowsMocks.hh"
 #endif
 
 using Napi::CallbackInfo;
 using Napi::Error;
 using Napi::Number;
-using Napi::String;
-using Napi::TypeError;
 
 auto userid::Gid(const CallbackInfo &info) -> Number {
   const auto env = info.Env();
+  const auto username = getArg<std::string>(info);
+  const auto *const name = username.c_str();
 
-  if (info.Length() < 1) {
-    throw TypeError::New(env, "Wrong number of arguments");
+  group grp{};
+  std::vector<char> buffer(BufferSize::grp());
+
+  while (true) {
+    decltype(grp) *result = nullptr;
+
+    auto errCode = getgrnam_r(name, &grp, buffer.data(), buffer.size(), &result);
+
+    if (errCode == ERANGE) {
+      buffer.reserve(buffer.size() * 2);
+      continue;
+    }
+
+    checkError(env, result, errCode, "groupname not found");
+
+    if (result != &grp) {
+      throw Error::New(env, "getgrnam_r returned unexpected result");
+    }
+
+    break;
   }
 
-  if (!info[0].IsString()) {
-    throw TypeError::New(env, "Argument must be a string");
-  }
-
-  const auto name = std::string(info[0].As<String>());
-
-  const auto *const group = getgrnam(name.c_str());
-
-  if (group == nullptr) {
-    throw Error::New(env, "groupname not found");
-  }
-
-  return Number::New(env, group->gr_gid);
+  return Number::New(env, grp.gr_gid);
 }

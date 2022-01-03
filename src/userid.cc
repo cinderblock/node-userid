@@ -3,11 +3,9 @@
 
 #include "userid.hh"
 
-using Napi::Env;
-using Napi::Function;
-using Napi::Object;
+auto Init(Napi::Env env, Napi::Object exports) -> Napi::Object {
+  using Napi::Function;
 
-auto Init(Env env, Object exports) -> Object {
   exports["ids"] = Function::New(env, &userid::Ids);
   exports["gid"] = Function::New(env, &userid::Gid);
   exports["gids"] = Function::New(env, &userid::Gids);
