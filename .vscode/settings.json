@@ -12,6 +12,7 @@
     ".clang-tidy": "yaml"
   },
   "clang-tidy.fixOnSave": true,
+  "clang-tidy.compilerArgs": ["-D__CLANG_TIDY__"],
   "clang-tidy.executable": "node",
   "clang-tidy.extraArgs": ["scripts/clang-tidy.mjs"]
 }

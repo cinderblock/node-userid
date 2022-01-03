@@ -208,6 +208,8 @@ auto strerror_r(int errnum, char *buf, std::size_t buflen) -> int;
 auto strerror_r(int errnum, char *buf, std::size_t buflen) -> char *;
 #endif
 
+#if !defined(__CLANG_TIDY__) && !defined(__VSCODE__)
 static_assert(false, "Something is wrong. This file should not be being built.");
+#endif
 
 // cSpell:ignore untruncated NOLINT

@@ -2,6 +2,7 @@
   "configurations": [
     {
       "name": "node-gyp N-API",
+      "defines": ["__VSCODE__"],
       "includePath": [
         "${workspaceFolder}/node_modules/node-addon-api",
         "${config:local.node-gyp.node-cache}/include/node"
