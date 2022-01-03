@@ -39,7 +39,7 @@
     "lint-c": "node scripts/clang-tidy.mjs src/*.cc src/*.hh",
     "lint-ts": "eslint \"**\"",
     "lint": "npm run lint-c && npm run lint-ts",
-    "coverage": "nyc --reporter=lcov --reporter=text mocha",
+    "coverage": "nyc --reporter=lcov --reporter=text npm test",
     "install": "npm run build",
     "clean": "node-gyp clean",
     "build": "node-gyp rebuild"
