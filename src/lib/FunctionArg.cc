@@ -22,7 +22,7 @@ template <> auto userid::getArg(const CallbackInfo &info, unsigned index) -> std
     throw TypeError::New(info.Env(), "Wrong number of arguments");
   }
 
-  if (!info[index].IsNumber()) {
+  if (!info[index].IsString()) {
     throw TypeError::New(info.Env(), "Argument must be a string");
   }
 
