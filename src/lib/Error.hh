@@ -10,5 +10,5 @@ namespace userid {
  * @param errNum
  * @param nullMessage
  */
-auto checkError(Napi::Env env, void const *result, int errNum, const char *nullMessage) -> void;
+auto checkError(Napi::Env env, void const *result, int errCode, char const *nullMessage) -> void;
 } // namespace userid
