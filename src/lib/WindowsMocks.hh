@@ -207,4 +207,6 @@ auto strerror_r(int errnum, char *buf, size_t buflen) -> int;
 auto strerror_r(int errnum, char *buf, size_t buflen) -> char *;
 #endif
 
+static_assert(false, "Something is wrong. This file should not be being built.");
+
 // cSpell:ignore untruncated NOLINT
