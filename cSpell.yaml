@@ -1,0 +1,29 @@
+version: 0.2,
+language: en,
+ignorePaths:
+  - '**/node_modules/**'
+  - '/build/**'
+  - '/coverage/**'
+  - '/.nyc_output/**'
+  - '**/package-lock.json'
+  - .vscode/extensions.json
+  - '**.svg'
+dictionaries:
+  - en_US
+  - typescript
+  - node
+  - filetypes
+  - npm
+  - proper-nouns
+  - export
+  - words
+  - dependencies
+dictionaryDefinitions:
+  - name: proper-nouns
+    path: ./cSpell/proper-nouns.txt
+  - name: export
+    path: ./cSpell/export.txt
+  - name: words
+    path: ./cSpell/words.txt
+  - name: dependencies
+    path: ./cSpell/dependencies.txt

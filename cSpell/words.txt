@@ -1,0 +1,10 @@
+Gids
+lcov
+gyp
+gypfile
+groupname
+libc
+msvs
+VCCL
+fvisibility
+lgcov
