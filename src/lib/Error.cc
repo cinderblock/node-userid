@@ -18,16 +18,36 @@ void userid::checkError(Napi::Env const env, void const *const result, int const
     throw Error::New(env, nullMessage);
   }
 
-  const auto size = strerrorlen_s(errCode);
+  const unsigned size = 80;
 
-  // strerrorlen_s returns one less than needed size. Make sure it's filled with null terminators.
-  std::vector<char> buffer(size + 1, '\0');
+  // Make sure it's filled with null terminators.
+  std::vector<char> buffer(size, '\0');
 
-  const auto err = strerror_s(buffer.data(), size, errCode);
+#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+  while (true) {
 
-  if (err != 0) {
-    throw Error::New(env, "strerror_s failed");
+    auto err = strerror_r(errCode, buffer.data(), size);
+
+    // Behavior changed in glibc 2.13
+#if defined(__GLIBC__) && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 13))
+    if (err == -1) {
+      err = errno;
+    }
+#endif
+
+    if (err == ERANGE) {
+      buffer.reserve(buffer.size() * 2);
+      continue;
+    }
+
+    if (err != 0) {
+      throw Error::New(env, "strerror_r failed");
+    }
+
+    throw Error::New(env, buffer.data());
   }
-
-  throw Error::New(env, buffer.data());
+#else
+  auto *const err = strerror_r(errCode, buffer.data(), size);
+  throw Error::New(env, err);
+#endif
 }

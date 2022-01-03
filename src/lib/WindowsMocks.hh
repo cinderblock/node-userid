@@ -181,13 +181,30 @@ extern const int _SC_GETPW_R_SIZE_MAX; // NOLINT(bugprone-reserved-identifier,ce
  */
 extern const int _SC_GETGR_R_SIZE_MAX; // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
 
+#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
 /**
- * Computes the length of the untruncated locale-specific error message that strerror_s would write if it were called
- * with errnum. The length does not include the null terminator.
+ * @brief
+ *
+ * XSI-compliant
  *
  * @param errnum
- * @return size_t
+ * @param buf
+ * @param buflen
+ * @return int 0 on success
  */
-auto strerrorlen_s(errno_t errnum) -> size_t;
+auto strerror_r(int errnum, char *buf, size_t buflen) -> int;
+#else
+/**
+ * @brief
+ *
+ * GNU-specific
+ *
+ * @param errnum
+ * @param buf
+ * @param buflen
+ * @return int 0 on success
+ */
+auto strerror_r(int errnum, char *buf, size_t buflen) -> char *;
+#endif
 
 // cSpell:ignore untruncated NOLINT
