@@ -21,7 +21,7 @@ const shellUid = await execToString('id -u').then(Number);
 const shellGid = await execToString('id -g').then(Number);
 
 // Get a nice list
-const shellGids = await execToString('id -G').then(gids => gids.split(' ').map(Number).sort());
+const shellGids = await execToString('id -G').then(gids => gids.split(' ').map(Number));
 
 // As per https://github.com/cinderblock/node-userid/issues/3 we need to test long usernames.
 // But we don't want to fail if a username is missing.
@@ -120,8 +120,9 @@ describe('userid', () => {
   });
 
   describe('method userid.gids', () => {
-    it(`should load a list of gids [${shellGids}] by username [${shellUsername}]`, () => {
-      userid.gids(shellUsername).sort().should.deepEqual(shellGids);
+    const shellGidsSorted = shellGids.sort((a, b) => a - b);
+    it(`should load a list of gids [${shellGidsSorted}] by username [${shellUsername}]`, () => {
+      userid.gids(shellUsername).sort().should.deepEqual(shellGidsSorted);
     });
 
     // TODO: test for a long username
