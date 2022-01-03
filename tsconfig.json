@@ -4,11 +4,16 @@
     "module": "commonjs",
 
     "lib": ["es2020"],
+    "types": ["mocha", "node"],
 
     "moduleResolution": "node",
 
-    /* Strict Type-Checking Options */
+    // "esModuleInterop": true,
+    // "composite": true,
+
     "strict": true,
+
+    /* Turned on by `strict` but let's be explicit anyway */
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
@@ -21,13 +26,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
-
-    /* Module Resolution Options */
-
-    "types": ["mocha", "node"],
-
-    // "esModuleInterop": true,
-
+    "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true
   }
 }
