@@ -1,5 +1,7 @@
 /node_modules/
 /build/
+/.nyc_output/
+/coverage/
 
 /README.md
 /cSpell.json
@@ -11,11 +13,11 @@ tsconfig.json
 *.hh
 *.d.ts
 
+/binding.gyp
+
 .editorconfig
+.eslintrc.yml
 
 .gitignore
 .prettierignore
 .eslintignore
-.eslintrc.yml
-
-/binding.gyp

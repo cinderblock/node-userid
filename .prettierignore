@@ -1,13 +1,15 @@
+/.nyc_output/
+/coverage/
 /node_modules/
 /build/
 
 *.cc
 *.hh
 
-/.editorconfig
-
-/.gitignore
-/.prettierignore
-/.eslintignore
-
 /binding.gyp
+
+.editorconfig
+
+.gitignore
+.prettierignore
+.eslintignore
