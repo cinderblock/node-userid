@@ -18,6 +18,7 @@
     "src/userid.d.ts",
     "src/userid.hh",
     "src/userid.cc",
+    "src/sources.cc",
     "src/Ids.cc",
     "src/Gid.cc",
     "src/Gids.cc",
