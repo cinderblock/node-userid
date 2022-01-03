@@ -59,8 +59,8 @@ jobs:
         run: npm test -- --color
         if: runner.os == 'Linux'
         env:
-          LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
-          LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
+          TEST_LONG_USERNAME: UsernameWithMoreThan15Chars
+          TEST_LONG_GROUPNAME: GroupnameWithMoreThan15Chars
 
         # Don't test long usernames on macOS
 

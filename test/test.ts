@@ -25,11 +25,11 @@ const shellGids = execToString('id -G').then(gids => gids.split(' ').map(Number)
 
 // As per https://github.com/cinderblock/node-userid/issues/3 we need to test long usernames.
 // But we don't want to fail if a username is missing.
-const longUsername = process.env.LONG_USERNAME_TEST;
+const longUsername = process.env.TEST_LONG_USERNAME;
 const longUsernameUid = longUsername ? execToString(`id -u ${longUsername}`).then(Number) : -1;
 
 // Try long group names too
-const longGroupname = process.env.LONG_GROUPNAME_TEST;
+const longGroupName = process.env.TEST_LONG_GROUPNAME;
 const longGroupnameGid = longGroupname ? execToString(`id -g ${longGroupname}`).then(Number) : -1;
 
 async function testIdsMethod() {

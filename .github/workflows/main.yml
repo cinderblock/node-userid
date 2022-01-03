@@ -51,8 +51,8 @@ jobs:
         run: npm test -- --color
         env:
           TEST_IMPORT_OVERRIDE: userid
-          LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
-          LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
+          TEST_LONG_USERNAME: UsernameWithMoreThan15Chars
+          TEST_LONG_GROUPNAME: GroupnameWithMoreThan15Chars
 
   test-native-api:
     # We fully support importing/requiring the native API `.node` directly.
@@ -86,8 +86,8 @@ jobs:
         env:
           TEST_IMPORT_OVERRIDE: ../build/Release/userid.node
           TEST_NODE_API: true
-          LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
-          LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
+          TEST_LONG_USERNAME: UsernameWithMoreThan15Chars
+          TEST_LONG_GROUPNAME: GroupnameWithMoreThan15Chars
 
   checks:
     name: Check - Formatting, Spelling, & Linting
