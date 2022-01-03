@@ -2,13 +2,13 @@ version: 0.2
 language: en
 relative: true
 ignorePaths:
-  - ./**/*.svg
-  - ./.vscode/extensions.json
-  - '**/package-lock.json'
-  - '**/node_modules/**'
-  - ./build/**
-  - ./coverage/**
-  - ./.nyc_output/**
+  - '**/*.svg'
+  - .vscode/extensions.json
+  - .git
+  - node_modules
+  - build
+  - coverage
+  - .nyc_output
 dictionaries:
   - en_US
   - typescript

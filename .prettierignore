@@ -8,6 +8,8 @@
 
 /binding.gyp
 
+/cSpell/
+
 .editorconfig
 
 .gitignore

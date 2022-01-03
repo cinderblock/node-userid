@@ -1,3 +1,9 @@
-getpwnam
+
+
+coverallsapp
+cpptools
 getgrid
 getgrname
+getpwnam
+npmjs
+npmrc
