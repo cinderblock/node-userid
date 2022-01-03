@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cerrno>
+#include <cstddef>
 #include <cstdint>
 
 using uid_t = uint32_t;
@@ -70,7 +71,7 @@ auto getgrgid(gid_t gid) -> struct group *;
  * @param result
  * @return int
  */
-auto getgrnam_r(const char *name, struct group *grp, char *buf, size_t buflen, struct group **result) -> int;
+auto getgrnam_r(const char *name, struct group *grp, char *buf, std::size_t buflen, struct group **result) -> int;
 
 /**
  * @brief Get the grp object
@@ -94,7 +95,7 @@ auto getgrnam_r(const char *name, struct group *grp, char *buf, size_t buflen, s
  * @param result
  * @return int
  */
-auto getgrgid_r(gid_t gid, struct group *grp, char *buf, size_t buflen, struct group **result) -> int;
+auto getgrgid_r(gid_t gid, struct group *grp, char *buf, std::size_t buflen, struct group **result) -> int;
 
 /**
  * The getpwnam() function returns a pointer to a structure containing
@@ -123,7 +124,7 @@ auto getpwuid(uid_t uid) -> struct passwd *;
  * returns either `-1`, without changing `errno`, or an initial suggested size for buf.
  * (If this size is too small, the call fails with ERANGE, in which case the caller can retry with a larger buffer.)
  */
-auto getpwnam_r(const char *name, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result) -> int;
+auto getpwnam_r(const char *name, struct passwd *pwd, char *buf, std::size_t buflen, struct passwd **result) -> int;
 
 /**
  * The getpwnam_r() and getpwuid_r() functions obtain the same information as getpwnam() and getpwuid(), but store the
@@ -138,7 +139,7 @@ auto getpwnam_r(const char *name, struct passwd *pwd, char *buf, size_t buflen, 
  * returns either `-1`, without changing `errno`, or an initial suggested size for buf.
  * (If this size is too small, the call fails with ERANGE, in which case the caller can retry with a larger buffer.)
  */
-auto getpwuid_r(uid_t uid, struct passwd *pwd, char *buf, size_t buflen, struct passwd **result) -> int;
+auto getpwuid_r(uid_t uid, struct passwd *pwd, char *buf, std::size_t buflen, struct passwd **result) -> int;
 
 /**
  * The getgrouplist() function scans the group database (see group(5))
@@ -192,7 +193,7 @@ extern const int _SC_GETGR_R_SIZE_MAX; // NOLINT(bugprone-reserved-identifier,ce
  * @param buflen
  * @return int 0 on success
  */
-auto strerror_r(int errnum, char *buf, size_t buflen) -> int;
+auto strerror_r(int errnum, char *buf, std::size_t buflen) -> int;
 #else
 /**
  * @brief
@@ -204,7 +205,7 @@ auto strerror_r(int errnum, char *buf, size_t buflen) -> int;
  * @param buflen
  * @return int 0 on success
  */
-auto strerror_r(int errnum, char *buf, size_t buflen) -> char *;
+auto strerror_r(int errnum, char *buf, std::size_t buflen) -> char *;
 #endif
 
 static_assert(false, "Something is wrong. This file should not be being built.");
