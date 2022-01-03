@@ -73,7 +73,7 @@ auto getgrgid(gid_t gid) -> struct group *;
 auto getgrnam_r(const char *name, struct group *grp, char *buf, size_t buflen, struct group **result) -> int;
 
 /**
- * @brief Get the grgid r object
+ * @brief Get the grp object
  *
  * The getgrnam_r() and getgrgid_r() functions obtain the same information as getgrnam() and getgrgid(), but store the
  * retrieved group structure in the space pointed to by grp. The string fields pointed to by the members of the group
@@ -190,4 +190,4 @@ extern const int _SC_GETGR_R_SIZE_MAX; // NOLINT(bugprone-reserved-identifier,ce
  */
 auto strerrorlen_s(errno_t errnum) -> size_t;
 
-// cSpell:ignore untruncated
+// cSpell:ignore untruncated NOLINT
