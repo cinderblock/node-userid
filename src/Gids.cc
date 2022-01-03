@@ -71,7 +71,7 @@ auto userid::Gids(const CallbackInfo &info) -> Array {
     foundGroups = getgrouplist(name, defaultGroup, groups.data(), &numGroupsGuess);
   } while (foundGroups == -1);
 
-  // So that we can use the vector's size, set it correctly
+  // Just in case
   groups.resize(static_cast<unsigned>(foundGroups));
 
   // Someday, node-addon-api may allow us to just do something like this:
