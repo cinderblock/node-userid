@@ -35,7 +35,7 @@
   },
   "scripts": {
     "test": "cross-env TS_NODE_PROJECT='./test/tsconfig.json' mocha",
-    "prettier": "prettier \"**\" --check",
+    "prettier": "prettier \"**\" \".*/**\" --check",
     "spelling": "cspell \"**\" \".*/**\"",
     "lint-c": "node scripts/clang-tidy.mjs src/sources.cc",
     "lint-ts": "eslint \"**\"",

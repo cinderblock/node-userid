@@ -2,6 +2,7 @@
 /build/
 /.nyc_output/
 /coverage/
+*.log
 
 /README.md
 /cSpell.json
@@ -13,10 +14,17 @@ tsconfig.json
 *.hh
 *.d.ts
 
+*.yml
+*.txt
+*.jso
+
 /binding.gyp
 
 .editorconfig
 .eslintrc.yml
+.clang-format
+.clang-tidy
+.prettierrc
 
 .gitignore
 .prettierignore
