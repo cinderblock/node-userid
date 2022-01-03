@@ -50,7 +50,7 @@ jobs:
       - name: Run Tests with Prepared Git Dependency
         run: npm test -- --color
         env:
-          MOCHA_IMPORT_OVERRIDE: userid
+          TEST_IMPORT_OVERRIDE: userid
           LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
           LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
 
@@ -84,8 +84,8 @@ jobs:
       - name: Run Tests with Prepared Git Dependency
         run: npm test -- --color
         env:
-          MOCHA_IMPORT_OVERRIDE: ../build/Release/userid.node
-          MOCHA_USE_NODE_API: true
+          TEST_IMPORT_OVERRIDE: ../build/Release/userid.node
+          TEST_NODE_API: true
           LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
           LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
 

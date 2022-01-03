@@ -1,9 +1,10 @@
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 /**
  * Run a command synchronously and get the output as a string with newlines stripped
  * @param command The command to run
  */
-export function execToString(command: string): string {
-  return execSync(command).toString().replace('\n', '');
+export default async function execToString(command: string): Promise<string> {
+  return (await promisify(exec)(command)).toString().replace('\n', '');
 }

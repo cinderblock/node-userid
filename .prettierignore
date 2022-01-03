@@ -1,7 +1,11 @@
 /node_modules/
-/src/
-/.editorconfig
 /build/
+
+*.cc
+*.hh
+
+/.editorconfig
+
 /.gitignore
 /.prettierignore
 /.eslintignore

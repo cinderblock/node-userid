@@ -11,11 +11,12 @@
     "type": "git",
     "url": "https://github.com/cinderblock/node-userid.git"
   },
-  "main": "lib/userid.js",
-  "types": "lib/userid.d.ts",
+  "type": "module",
+  "main": "src/userid.cjs",
+  "types": "src/userid.d.ts",
   "files": [
-    "lib/userid.js",
-    "lib/userid.d.ts",
+    "src/userid.cjs",
+    "src/userid.d.ts",
     "src/userid.hh",
     "src/userid.cc",
     "src/Ids.cc",
