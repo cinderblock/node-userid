@@ -34,13 +34,19 @@
     "node": ">=8.4.0"
   },
   "scripts": {
-    "test": "cross-env TS_NODE_PROJECT='./test/tsconfig.json' mocha",
+    "check": "npm run prettier && npm run lint && npm run spelling",
     "prettier": "prettier \"**\" \".*/**\" --check",
-    "spelling": "cspell \"**\" \".*/**\"",
+    "lint": "npm run lint-c && npm run lint-ts",
     "lint-c": "node scripts/clang-tidy.mjs src/sources.cc",
     "lint-ts": "eslint \"**\"",
-    "lint": "npm run lint-c && npm run lint-ts",
-    "coverage": "nyc --reporter=lcov --reporter=text npm test",
+    "spelling": "cspell \"**\" \".*/**\"",
+    "test": "cross-env TS_NODE_PROJECT='./test/tsconfig.json' mocha",
+    "coverage": "npm run coverage-test && npm run coverage-convert",
+    "coverage-test": "nyc --reporter=lcov --reporter=text --reporter=text-lcov npm test",
+    "coverage-convert": "npm run coverage-convert-capture && npm run coverage-convert-extract && npm run coverage-convert-combine",
+    "coverage-convert-capture": "lcov --capture --directory . --output-file coverage/cc.info",
+    "coverage-convert-extract": "lcov --extract coverage/cc.info '*.cc' --output-file coverage/cc.info",
+    "coverage-convert-combine": "lcov --add-tracefile coverage/cc.info --add-tracefile coverage/lcov.info --output-file coverage/lcov.info",
     "install": "npm run build",
     "clean": "node-gyp clean",
     "build": "node-gyp rebuild"

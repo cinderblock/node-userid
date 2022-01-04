@@ -147,7 +147,7 @@ jobs:
         run: find * \( -path node_modules -o -path .git \) -print -prune -o -type f -print | tee /tmp/build.list
 
       - name: Test Coverage of JavaScript and C++
-        run: npm run coverage
+        run: npm run coverage-test
 
       - name: 'Debug: List post Coverage files'
         run: find * \( -path node_modules -o -path .git \) -print -prune -o -type f -print | tee /tmp/coverage.list
@@ -155,14 +155,8 @@ jobs:
       - name: 'Debug: Coverage diff'
         run: 'diff -U 0 /tmp/build.list /tmp/coverage.list || :'
 
-      - name: Lcov Capture Gcov Data
-        run: lcov --capture --directory . --output-file coverage/cc.info
-
-      - name: Extract Our C++ Sources' Coverage Data
-        run: lcov --extract coverage/cc.info '*.cc' --output-file coverage/cc.info
-
-      - name: Combine Our C++ Sources' Coverage Data with JavaScript's Coverage Data
-        run: lcov --add-tracefile coverage/cc.info --add-tracefile coverage/lcov.info --output-file coverage/lcov.info
+      - name: Convert coverage info to useful format
+        run: npm run coverage-convert
 
       - name: 'Debug: Print coverage report'
         run: lcov --list coverage/lcov.info
