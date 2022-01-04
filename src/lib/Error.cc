@@ -26,7 +26,7 @@ void userid::checkError(Napi::Env const env, void const *const result, int const
 #if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
   while (true) {
 
-    auto err = strerror_r(errCode, buffer.data(), size);
+    auto err = strerror_r(errCode, buffer.data(), buffer.size());
 
     // Behavior changed in glibc 2.13
 #if defined(__GLIBC__) && (__GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 13))
