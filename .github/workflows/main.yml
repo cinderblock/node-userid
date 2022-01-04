@@ -146,7 +146,7 @@ jobs:
       - name: 'Debug: List post build files'
         run: find * \( -path node_modules -o -path .git \) -print -prune -o -type f -print | tee /tmp/build.list
 
-      - name: Test Coverage of JavaScript
+      - name: Test Coverage of JavaScript and C++
         run: npm run coverage
 
       - name: 'Debug: List post Coverage files'
