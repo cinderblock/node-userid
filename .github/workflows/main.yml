@@ -168,7 +168,7 @@ jobs:
         run: 'diff -U 0 /tmp/coverage.list /tmp/lcov.list || :'
 
       - name: Coveralls GitHub Action
-        uses: coverallsapp/github-action@v1.0.1
+        uses: coverallsapp/github-action@v1.1.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
