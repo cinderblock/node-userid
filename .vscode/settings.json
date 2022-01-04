@@ -13,5 +13,9 @@
   },
   "clang-tidy.fixOnSave": true,
   "clang-tidy.executable": "node",
-  "clang-tidy.extraArgs": ["scripts/clang-tidy.mjs"]
+  "clang-tidy.extraArgs": ["scripts/clang-tidy.mjs"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python"
+  },
+  "python.formatting.provider": "black"
 }
