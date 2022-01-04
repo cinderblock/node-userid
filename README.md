@@ -5,7 +5,7 @@ Thread safe.
 
 [![](https://github.com/cinderblock/node-userid/workflows/Main/badge.svg)](https://github.com/cinderblock/node-userid/actions)
 [![](https://github.com/cinderblock/node-userid/workflows/Test%20All%20Versions/badge.svg)](https://github.com/cinderblock/node-userid/actions)
-[![Coverage Status](https://coveralls.io/repos/github/cinderblock/node-userid/badge.svg?branch=master)](https://coveralls.io/github/cinderblock/node-userid?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/cinderblock/node-userid/badge.svg?branch=master)](https://coveralls.io/github/cinderblock/node-userid?branch=master) _(JavaScript & C++!)_
 
 ## Installation
 
@@ -60,12 +60,27 @@ Yarn should work, but we want to use Npm's `package-lock.json`.
 
 Development on Windows is possible but there are two main hurdles.
 
+#### `package.json#engines`
+
 The initial problem is that we've marked this package as not compatible with Windows.
 Simply remove that line from the `package.json` before running `npm install`.
 Please do not commit this change.
 
+#### Linking
+
 The other problem is that we cannot actually link the binary on a Windows machine because the bindings to the operating system calls are missing.
 However, mock declarations for development on Windows machines are provided and will allow the `.cc` files to compile.
+
+#### WSL to the Rescue
+
+One nice solution is to open the folder in a WSL terminal.
+This enables linking and running on Linux.
+It also generates coverage information that will show up in code gutters with the correct extension installed.
+
+```bash
+GENERATE_COVERAGE="yes" npm run build
+npm run coverage
+```
 
 Pull requests that would bring Windows into the fold would be welcome.
 
@@ -78,6 +93,8 @@ Pull requests that would bring Windows into the fold would be welcome.
 - Windows compatibility?
   - WSL
   - Windows equivalent native methods
+  - Mock implementation?
+  - Optional dependency?
 
 ## History
 
