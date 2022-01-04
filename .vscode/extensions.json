@@ -4,6 +4,12 @@
     "editorconfig.editorconfig",
     "esbenp.prettier-vscode",
     "notskm.clang-tidy",
-    "dbaeumer.vscode-eslint"
+    "dbaeumer.vscode-eslint",
+    "ryanluker.vscode-coverage-gutters",
+    "ms-vscode.cpptools-extension-pack",
+    "streetsidesoftware.code-spell-checker",
+    "eg2.vscode-npm-script",
+    "christian-kohler.npm-intellisense",
+    "austin.code-gnu-global"
   ]
 }
