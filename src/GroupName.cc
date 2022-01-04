@@ -29,7 +29,7 @@ auto userid::GroupName(const CallbackInfo &info) -> String {
     const auto errCode = getgrgid_r(gid, &grp, buffer.data(), buffer.size(), &result);
 
     if (errCode == ERANGE) {
-      buffer.reserve(buffer.size() * 2);
+      buffer.resize(buffer.size() * 2);
       continue;
     }
 

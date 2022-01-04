@@ -42,7 +42,7 @@ auto userid::Gids(const CallbackInfo &info) -> Array {
     const auto errCode = getpwnam_r(name, &pwd, buffer.data(), buffer.size(), &result);
 
     if (errCode == ERANGE) {
-      buffer.reserve(buffer.size() * 2);
+      buffer.resize(buffer.size() * 2);
       continue;
     }
 

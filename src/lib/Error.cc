@@ -36,7 +36,7 @@ void userid::checkError(Napi::Env const env, void const *const result, int const
 #endif
 
     if (err == ERANGE) {
-      buffer.reserve(buffer.size() * 2);
+      buffer.resize(buffer.size() * 2);
       continue;
     }
 

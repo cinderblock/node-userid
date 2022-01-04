@@ -30,7 +30,7 @@ auto userid::Gid(const CallbackInfo &info) -> Number {
     auto errCode = getgrnam_r(name, &grp, buffer.data(), buffer.size(), &result);
 
     if (errCode == ERANGE) {
-      buffer.reserve(buffer.size() * 2);
+      buffer.resize(buffer.size() * 2);
       continue;
     }
 

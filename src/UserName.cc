@@ -29,7 +29,7 @@ auto userid::UserName(const CallbackInfo &info) -> String {
     const auto errCode = getpwuid_r(uid, &pwd, buffer.data(), buffer.size(), &result);
 
     if (errCode == ERANGE) {
-      buffer.reserve(buffer.size() * 2);
+      buffer.resize(buffer.size() * 2);
       continue;
     }
 
