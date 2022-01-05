@@ -41,18 +41,15 @@ jobs:
 
       # Ensure the code works
 
-      - name: Add long username for test
-        run: sudo useradd UsernameWithMoreThan15Chars
-
-      - name: Add long groupname for test
-        run: sudo useradd GroupnameWithMoreThan15Chars
+      - name: Add long username and groupname for test
+        run: sudo useradd NameWithMoreThan15Chars
 
       - name: Run Tests with Prepared Git Dependency
         run: npm test -- --color
         env:
           TEST_IMPORT_OVERRIDE: userid
-          TEST_LONG_USERNAME: UsernameWithMoreThan15Chars
-          TEST_LONG_GROUPNAME: GroupnameWithMoreThan15Chars
+          TEST_LONG_USERNAME: NameWithMoreThan15Chars
+          TEST_LONG_GROUPNAME: NameWithMoreThan15Chars
 
   test-native-api:
     # We fully support importing/requiring the native API `.node` directly.
@@ -75,19 +72,16 @@ jobs:
       - name: 'Debug: List post build files'
         run: find * \( -path node_modules -o -path .git \) -print -prune -o -type f -print | tee /tmp/build.list
 
-      - name: Add long username for test
-        run: sudo useradd UsernameWithMoreThan15Chars
-
-      - name: Add long groupname for test
-        run: sudo useradd GroupnameWithMoreThan15Chars
+      - name: Add long username and groupname for test
+        run: sudo useradd --user-group NameWithMoreThan15Chars
 
       - name: Run Tests with Prepared Git Dependency
         run: npm test -- --color
         env:
           TEST_IMPORT_OVERRIDE: ../build/Release/userid.node
           TEST_NODE_API: true
-          TEST_LONG_USERNAME: UsernameWithMoreThan15Chars
-          TEST_LONG_GROUPNAME: GroupnameWithMoreThan15Chars
+          TEST_LONG_USERNAME: NameWithMoreThan15Chars
+          TEST_LONG_GROUPNAME: NameWithMoreThan15Chars
 
   checks:
     name: Check - Formatting, Spelling, & Linting
