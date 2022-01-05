@@ -47,9 +47,9 @@
     "coverage-convert-capture": "lcov --capture --directory . --output-file coverage/cc.info",
     "coverage-convert-extract": "lcov --extract coverage/cc.info '*.cc' --output-file coverage/cc.info",
     "coverage-convert-combine": "lcov --add-tracefile coverage/cc.info --add-tracefile coverage/lcov.info --output-file coverage/lcov.info",
-    "install": "npm run build userid",
+    "install": "npm run build",
     "clean": "node-gyp clean",
-    "build": "node-gyp build userid",
+    "build": "node-gyp rebuild",
     "build-coverage": "cross-env GENERATE_COVERAGE=\"yes\" npm run build"
   },
   "gypfile": true,
