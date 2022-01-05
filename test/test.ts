@@ -27,6 +27,9 @@ const shellGids = await execToString('id -G').then(gids => gids.split(' ').map(N
 const longUsername = process.env.TEST_LONG_USERNAME;
 const longUsernameUid = longUsername ? await execToString(`id -u ${longUsername}`).then(Number) : -1;
 const longUsernameGid = longUsername ? await execToString(`id -g ${longUsername}`).then(Number) : -1;
+const longUsernameGids = longUsername
+  ? await execToString(`id -G ${longUsername}`).then(gids => gids.split(' ').map(Number))
+  : [];
 
 // Try long group names too
 const longGroupname = process.env.TEST_LONG_GROUPNAME;
@@ -143,8 +146,15 @@ describe('userid', () => {
       userid.gids(shellUsername).should.deepEqual(shellGids);
     });
 
-    // TODO: test for a long username
-    // TODO: test for a long groupname in returned list
+    if (longUsername) {
+      describe('with long names', () => {
+        it(`should load a list of gids [${longUsernameGids}] by username [${longUsername}]`, () => {
+          userid.gids(longUsername).should.deepEqual(longUsernameGids);
+        });
+
+        // TODO: test for a long groupname in returned list
+      });
+    }
 
     itShouldHandleErrorsConsistently(userid.gids, 'string', 'user', 'username not found');
   });
