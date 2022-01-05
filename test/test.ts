@@ -44,11 +44,13 @@ function testIdsMethod() {
   });
 
   if (longUsername) {
-    it(`should work with a long username [${longUsername}] that exists`, () => {
-      const libLongIds = userid.ids(longUsername);
+    describe('with long names', () => {
+      it(`should work with a long username [${longUsername}] that exists`, () => {
+        const libLongIds = userid.ids(longUsername);
 
-      libLongIds.uid.should.equal(longUsernameUid);
-      libLongIds.gid.should.equal(longUsernameGid);
+        libLongIds.uid.should.equal(longUsernameUid);
+        libLongIds.gid.should.equal(longUsernameGid);
+      });
     });
   }
 
@@ -96,8 +98,10 @@ describe('userid', () => {
       });
 
       if (longUsername) {
-        it(`should work with a long username [${longUsername}] that exists`, () => {
-          userid.uid(longUsername).should.equal(longUsernameUid);
+        describe('with long names', () => {
+          it(`should work with a long username [${longUsername}] that exists`, () => {
+            userid.uid(longUsername).should.equal(longUsernameUid);
+          });
         });
       }
 
@@ -111,8 +115,10 @@ describe('userid', () => {
     });
 
     if (longUsername) {
-      it(`should load a long username [${longUsername}] by uid [${longUsernameUid}]`, () => {
-        userid.username(longUsernameUid).should.equal(longUsername);
+      describe('with long names', () => {
+        it(`should load a long username [${longUsername}] by uid [${longUsernameUid}]`, () => {
+          userid.username(longUsernameUid).should.equal(longUsername);
+        });
       });
     }
 
@@ -125,8 +131,10 @@ describe('userid', () => {
     });
 
     if (longGroupname) {
-      it(`should work with a long groupname [${longGroupname}] that exists`, () => {
-        userid.gid(longGroupname).should.equal(longGroupnameGid);
+      describe('with long names', () => {
+        it(`should work with a long groupname [${longGroupname}] that exists`, () => {
+          userid.gid(longGroupname).should.equal(longGroupnameGid);
+        });
       });
     }
 
@@ -139,8 +147,10 @@ describe('userid', () => {
     });
 
     if (longGroupname) {
-      it(`should work with a long groupname [${longGroupname}] that exists`, () => {
-        userid.groupname(longGroupnameGid).should.equal(longGroupname);
+      describe('with long names', () => {
+        it(`should work with a long groupname [${longGroupname}] that exists`, () => {
+          userid.groupname(longGroupnameGid).should.equal(longGroupname);
+        });
       });
     }
 
