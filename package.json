@@ -41,15 +41,16 @@
     "lint-ts": "eslint \"**\"",
     "spelling": "cspell \"**\" \".*/**\"",
     "test": "cross-env TS_NODE_PROJECT='./test/tsconfig.json' mocha",
-    "coverage": "npm run coverage-test && npm run coverage-convert",
-    "coverage-test": "nyc --reporter=lcov --reporter=text --reporter=text-lcov npm test",
+    "coverage": "npm run build-coverage && npm run coverage-test && npm run coverage-convert",
+    "coverage-test": "nyc --reporter=lcov npm test",
     "coverage-convert": "npm run coverage-convert-capture && npm run coverage-convert-extract && npm run coverage-convert-combine",
     "coverage-convert-capture": "lcov --capture --directory . --output-file coverage/cc.info",
     "coverage-convert-extract": "lcov --extract coverage/cc.info '*.cc' --output-file coverage/cc.info",
     "coverage-convert-combine": "lcov --add-tracefile coverage/cc.info --add-tracefile coverage/lcov.info --output-file coverage/lcov.info",
-    "install": "npm run build",
+    "install": "npm run build userid",
     "clean": "node-gyp clean",
-    "build": "node-gyp rebuild"
+    "build": "node-gyp build userid",
+    "build-coverage": "cross-env GENERATE_COVERAGE=\"yes\" npm run build"
   },
   "gypfile": true,
   "dependencies": {
