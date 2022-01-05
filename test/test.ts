@@ -72,6 +72,12 @@ if (longUsername || longGroupname) {
         });
       });
     }
+
+    if (longUsername && longGroupname) {
+      it(`long username [${longUsername}] should be a member of [${longGroupname}]`, () => {
+        longUsernameGids.should.containEql(longGroupnameGid);
+      });
+    }
   });
 }
 
@@ -152,7 +158,9 @@ describe('userid', () => {
           userid.gids(longUsername).should.deepEqual(longUsernameGids);
         });
 
-        // TODO: test for a long groupname in returned list
+        it(`should include [${longGroupnameGid}]`, () => {
+          userid.gids(longUsername).should.containEql(longGroupnameGid);
+        });
       });
     }
 
