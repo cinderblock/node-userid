@@ -52,6 +52,26 @@ function testIdsMethod() {
   itShouldHandleErrorsConsistently(userid.ids, 'string', 'username', 'username not found');
 }
 
+if (longUsername || longGroupname) {
+  describe('long names', () => {
+    if (longUsername) {
+      describe('long username', () => {
+        it(`[${longUsername}] should be longer than 15 characters`, () => {
+          longUsername.length.should.be.above(15);
+        });
+      });
+    }
+
+    if (longGroupname) {
+      describe('long groupname', () => {
+        it(`[${longGroupname}] should be longer than 15 characters`, () => {
+          longGroupname.length.should.be.above(15);
+        });
+      });
+    }
+  });
+}
+
 describe('userid', () => {
   describe('method userid.ids', testIdsMethod);
 
