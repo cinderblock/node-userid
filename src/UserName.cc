@@ -5,6 +5,7 @@
 #include "lib/Error.hh"
 #include "lib/FunctionArg.hh"
 #include "userid.hh"
+#include <algorithm>
 
 #if !defined(_WIN32)
 #include <pwd.h>
@@ -28,8 +29,10 @@ auto userid::UserName(const CallbackInfo &info) -> String {
 
     const auto errCode = getpwuid_r(uid, &pwd, buffer.data(), buffer.size(), &result);
 
+    // ERANGE is reported when buffer wasn't big enough
     if (errCode == ERANGE) {
-      buffer.resize(buffer.size() * 2);
+      // Make sure we don't somehow accidentally get stuck at size = 0
+      buffer.resize(std::max<unsigned>(buffer.size() * 2, 1));
       continue;
     }
 

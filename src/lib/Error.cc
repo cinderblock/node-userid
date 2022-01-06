@@ -1,5 +1,6 @@
 
 #include "Error.hh"
+#include <algorithm>
 #include <cstring>
 
 using Napi::Error;
@@ -35,8 +36,10 @@ void userid::checkError(Napi::Env const env, void const *const result, int const
     }
 #endif
 
+    // ERANGE is reported when buffer wasn't big enough
     if (err == ERANGE) {
-      buffer.resize(buffer.size() * 2);
+      // Make sure we don't somehow accidentally get stuck at size = 0
+      buffer.resize(std::max<unsigned>(buffer.size() * 2, 1));
       continue;
     }
 
