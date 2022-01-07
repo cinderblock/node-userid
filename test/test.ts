@@ -83,7 +83,7 @@ if (longUsername || longGroupname) {
   });
 }
 
-describe('userid', () => {
+function fullSuite() {
   describe('method userid.ids', testIdsMethod);
 
   // If we're using the Node API
@@ -176,4 +176,8 @@ describe('userid', () => {
 
     itShouldHandleErrorsConsistently(userid.gids, 'string', 'user', 'username not found');
   });
-});
+}
+
+describe('userid', fullSuite).beforeAll(() => userid._override_buffer_size?.());
+if (userid._override_buffer_size)
+  describe('userid with buffer override', fullSuite).beforeAll(() => userid._override_buffer_size?.(0));

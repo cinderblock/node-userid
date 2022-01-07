@@ -54,3 +54,9 @@ export declare function username(uid: number): string;
  * @return {Array} gid
  */
 export declare function gids(username: string): number[];
+
+/**
+ * For testing full coverage, allow to override the initial size of some buffers
+ * @param size
+ */
+export declare const _override_buffer_size: undefined | ((size?: number) => void);

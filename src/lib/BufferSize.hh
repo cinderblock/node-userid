@@ -1,8 +1,12 @@
 #pragma once
 
-namespace userid {
-namespace BufferSize {
-auto grp() -> unsigned;
-auto pwd() -> unsigned;
-} // namespace BufferSize
-} // namespace userid
+#include <cstddef>
+
+namespace userid::BufferSize {
+auto grp() noexcept -> std::size_t;
+auto pwd() noexcept -> std::size_t;
+#ifdef DEBUG
+void overrideDisable() noexcept;
+void override(std::size_t = 0) noexcept;
+#endif
+} // namespace userid::BufferSize

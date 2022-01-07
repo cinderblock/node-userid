@@ -19,6 +19,7 @@ const defines = {
 };
 
 const options = {
+  std: 'c++17',
 };
 
 const includeArgs = includes.map(include => `-I${include}`);
