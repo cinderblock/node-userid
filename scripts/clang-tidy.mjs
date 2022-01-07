@@ -14,7 +14,20 @@ const includes = [
   `${cachePath}/${process.versions.node}/include/node`, // node_api.h
 ];
 
-const compilerArgs = ['-D__CLANG_TIDY__', ...includes.map(i => `-I${i}`)];
+const defines = {
+  __CLANG_TIDY__: true,
+};
+
+const options = {
+};
+
+const includeArgs = includes.map(include => `-I${include}`);
+
+const defineArgs = Object.entries(defines).map(([def, val]) => `-D${def}${val === true ? '' : `=${val}`}`);
+
+const optionsArgs = Object.entries(options).map(([opt, val]) => `-${opt}=${val}`);
+
+const compilerArgs = [...defineArgs, ...includeArgs, ...optionsArgs];
 
 const cliArgs = process.argv.slice(2);
 
