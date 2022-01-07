@@ -11,12 +11,14 @@ const cachePath =
 
 const includes = [
   'node_modules/node-addon-api', // napi.h
-  `${cachePath}/${process.version.slice(1)}/include/node`, // node_api.h
+  `${cachePath}/${process.versions.node}/include/node`, // node_api.h
 ];
 
 const compilerArgs = ['-D__CLANG_TIDY__', ...includes.map(i => `-I${i}`)];
 
-const args = [...compilerArgs.map(i => `--extra-arg=${i}`), ...process.argv.slice(2)];
+const cliArgs = process.argv.slice(2);
+
+const args = [...compilerArgs.map(arg => `--extra-arg=${arg}`), ...cliArgs];
 
 // console.log('> clang-tidy', args);
 
