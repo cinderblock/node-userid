@@ -37,7 +37,7 @@
     "check": "npm run prettier && npm run lint && npm run spelling",
     "prettier": "prettier \"**\" \".*/**\" --check",
     "lint": "npm run lint-c && npm run lint-ts",
-    "lint-c": "node scripts/clang-tidy.mjs src/sources.cc",
+    "lint-c": "node scripts/clang-tidy.mjs src/**.cc src/lib/**.cc src/**.hh src/lib/**.hh",
     "lint-ts": "eslint \"**\"",
     "spelling": "cspell \"**\" \".*/**\"",
     "test": "cross-env TS_NODE_PROJECT='./test/tsconfig.json' mocha",
