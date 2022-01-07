@@ -53,5 +53,3 @@ auto userid::Ids(const CallbackInfo &info) -> Object {
     return ret;
   }
 }
-
-// cSpell:ignore NOLINT

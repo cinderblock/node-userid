@@ -8,5 +8,3 @@
 #include "lib/BufferSize.cc"  // NOLINT(bugprone-suspicious-include)
 #include "lib/Error.cc"       // NOLINT(bugprone-suspicious-include)
 #include "lib/FunctionArg.cc" // NOLINT(bugprone-suspicious-include)
-
-// cSpell:ignore NOLINT

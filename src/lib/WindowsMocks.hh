@@ -212,4 +212,4 @@ auto strerror_r(int errnum, char *buf, std::size_t buflen) -> char *;
 static_assert(false, "Something is wrong. This file should not be being built.");
 #endif
 
-// cSpell:ignore untruncated NOLINT
+// cSpell:ignore untruncated

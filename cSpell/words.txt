@@ -10,3 +10,5 @@ lgcov
 libc
 msvs
 tracefile
+NOLINT
+NOLINTNEXTLINE
