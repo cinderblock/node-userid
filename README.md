@@ -78,7 +78,6 @@ This enables linking and running on Linux.
 It also generates coverage information that will show up in code gutters with the correct extension installed.
 
 ```bash
-GENERATE_COVERAGE="yes" npm run build
 npm run coverage
 ```
 

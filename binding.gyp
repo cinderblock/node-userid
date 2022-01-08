@@ -7,6 +7,9 @@
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],
             "cflags_cc": ["-std=c++17"],
+            "link_settings": {
+                "libraries+": ["-lgcov"],
+            },
             "xcode_settings": {
                 "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
                 "CLANG_CXX_LIBRARY": "libc++",
@@ -15,30 +18,24 @@
             "msvs_settings": {
                 "VCCLCompilerTool": {"ExceptionHandling": 1},
             },
-            "variables": {
-                "generate_coverage": "<!(echo $GENERATE_COVERAGE)",
-            },
             "conditions": [
                 [
                     'OS=="mac"',
                     {
+                        # TODO: Is this needed?
                         "cflags+": ["-fvisibility=hidden"],
                         "xcode_settings": {
                             "GCC_SYMBOLS_PRIVATE_EXTERN": "YES",  # -fvisibility=hidden
                         },
                     },
                 ],
-                [
-                    'generate_coverage=="yes"',
-                    {
-                        "cflags+": ["--coverage"],
-                        "cflags_cc+": ["--coverage"],
-                        "link_settings": {
-                            "libraries+": ["-lgcov"],
-                        },
-                    },
-                ],
             ],
+            "configurations": {
+                "Debug": {
+                    "cflags+": ["--coverage"],
+                    "cflags_cc+": ["--coverage"],
+                },
+            },
         },
     ],
 }

@@ -50,7 +50,7 @@
     "install": "npm run build",
     "clean": "node-gyp clean",
     "build": "node-gyp rebuild",
-    "build-coverage": "cross-env GENERATE_COVERAGE=\"yes\" npm run build -- --debug"
+    "build-coverage": "npm run build -- --debug"
   },
   "gypfile": true,
   "dependencies": {

@@ -131,11 +131,11 @@ jobs:
       - name: 'Debug: Node version'
         run: node --version
 
-      - name: Build
-        run: npm ci
-        env:
-          # Turns on Gcov instrumentation in compiled binaries
-          GENERATE_COVERAGE: 'yes'
+      - name: Install
+        run: npm ci --ignore-scripts
+
+      - name: Build with Coverage collection
+        run: npm run build-coverage
 
       - name: 'Debug: List post build files'
         run: find * \( -path node_modules -o -path .git \) -print -prune -o -type f -print | tee /tmp/build.list
