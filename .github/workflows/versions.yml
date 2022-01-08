@@ -47,20 +47,16 @@ jobs:
 
         # Test long usernames on Linux
 
-      - name: Add long username for test
+      - name: Add long username and groupname for test
         if: runner.os == 'Linux'
-        run: sudo useradd UsernameWithMoreThan15Chars
-
-      - name: Add long groupname for test
-        if: runner.os == 'Linux'
-        run: sudo useradd GroupnameWithMoreThan15Chars
+        run: sudo useradd --user-group NameWithMoreThan15Chars
 
       - name: Test (with long names)
         run: npm test -- --color
         if: runner.os == 'Linux'
         env:
-          TEST_LONG_USERNAME: UsernameWithMoreThan15Chars
-          TEST_LONG_GROUPNAME: GroupnameWithMoreThan15Chars
+          TEST_LONG_USERNAME: NameWithMoreThan15Chars
+          TEST_LONG_GROUPNAME: NameWithMoreThan15Chars
 
         # Don't test long usernames on macOS
 
