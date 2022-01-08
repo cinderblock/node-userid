@@ -24,7 +24,7 @@ void userid::checkError(Napi::Env const env, void const *const result, int const
   // Make sure it's filled with null terminators.
   std::vector<char> buffer(size, '\0');
 
-#if (_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE
+#if defined(__APPLE__) || ((_POSIX_C_SOURCE >= 200112L) && !_GNU_SOURCE)
   while (true) {
 
     auto err = strerror_r(errCode, buffer.data(), buffer.size());
