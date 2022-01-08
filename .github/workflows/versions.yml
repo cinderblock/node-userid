@@ -20,8 +20,10 @@ jobs:
         os: [ubuntu-latest, macos-latest]
         # There are problems on various architectures on lower versions that are more work to fix. Please open an issue if you need more version support
         node:
-          - 12
-          - 13
+          # Doesn't work with esm module output from new TypeScript output configuration
+          #- 12
+          #- 13
+
           - 14
           - 15
           - 16
