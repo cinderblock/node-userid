@@ -5,7 +5,7 @@ name: Test All Versions
 on:
   push:
     branches-ignore:
-      - 'npm-check-updates'
+      - npm-check-updates
   pull_request:
   repository_dispatch:
   schedule:
@@ -23,7 +23,6 @@ jobs:
           # Doesn't work with esm module output from new TypeScript output configuration
           #- 12
           #- 13
-
           - 14
           - 15
           - 16
