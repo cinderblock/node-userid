@@ -83,6 +83,32 @@ jobs:
           TEST_LONG_USERNAME: NameWithMoreThan15Chars
           TEST_LONG_GROUPNAME: NameWithMoreThan15Chars
 
+  test-macos:
+    runs-on: macos-latest
+
+    name: Test on macOS
+
+    steps:
+      - name: Enable color for Npm output
+        run: echo color = always >> .npmrc
+
+      - name: Checkout latest code
+        uses: actions/checkout@v1
+
+      - name: Install Node ${{ matrix.node }}
+        uses: actions/setup-node@v1
+
+      - name: 'Debug: Node version'
+        run: node --version
+
+        # Install dependencies and Build
+
+      - name: Install dependencies and Build using `npm install` to get latest non-breaking changes
+        run: npm ci
+
+      - name: Test (without long names)
+        run: npm test -- --color
+
   checks:
     name: Check - Formatting, Spelling, & Linting
 
@@ -176,6 +202,7 @@ jobs:
       - coverage
       - install-and-run-from-git
       - checks
+      - test-macos
 
     steps:
       - name: Enable color for Npm output
