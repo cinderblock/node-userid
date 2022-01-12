@@ -61,7 +61,14 @@ auto userid::Gids(const CallbackInfo &info) -> Array {
   int numGroupsGuess = FirstGuess;
   int foundGroups = 0;
 
-  std::vector<gid_t> groups;
+#if defined(__APPLE__)
+  // Think different
+  using Gid = int;
+#else
+  using Gid = gid_t;
+#endif
+
+  std::vector<Gid> groups;
 
   do {
     // Grow the vector to fit our current guess
