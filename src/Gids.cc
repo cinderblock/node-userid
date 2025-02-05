@@ -10,11 +10,7 @@
 #if !defined(_WIN32)
 #include <grp.h>
 #include <pwd.h>
-
-// BSD needs unistd.h for getgrouplist function
-#if defined(BSD) || defined(__APPLE__)
 #include <unistd.h>
-#endif
 
 #if defined(__APPLE__)
 using gid_t = int;
