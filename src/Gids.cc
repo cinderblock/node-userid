@@ -3,6 +3,10 @@
 
 #include "userid.hh"
 
+#include <algorithm>
+#include <cstdint>
+#include <vector>
+
 #if !defined(_WIN32)
 #include <grp.h>
 #include <pwd.h>
@@ -113,14 +117,24 @@ auto userid::Gids(const CallbackInfo &info) -> Array {
     // returns `-1` if we guessed too low
   } while (foundGroups == -1);
 
-  auto ret = Array::New(env, foundGroups);
+  // On success, `ngroups` holds the number of groups stored. (The return value is not a count on every platform.)
+  // BSDs (and macOS) always add the base group and may list it again, so drop duplicates like `id -G` does.
+  std::vector<gidType> unique;
+  unique.reserve(ngroups);
 
   for (int i = 0; i < ngroups; i++) {
-    // TODO(Cameron): Is this safe?
-    ret[i] = Number::New(env, groups[i]);
+    if (std::find(unique.begin(), unique.end(), groups[i]) == unique.end()) {
+      unique.push_back(groups[i]);
+    }
   }
 
   delete[] groups;
+
+  auto ret = Array::New(env, unique.size());
+
+  for (std::size_t i = 0; i < unique.size(); i++) {
+    ret[static_cast<uint32_t>(i)] = Number::New(env, unique[i]);
+  }
 
   return ret;
 }

@@ -155,6 +155,12 @@ describe('userid', () => {
       userid.gids(shellUsername).sort().should.deepEqual(shellGids);
     });
 
+    it(`should not list any gid twice for username [${shellUsername}]`, () => {
+      const gids = userid.gids(shellUsername);
+
+      gids.length.should.equal(new Set(gids).size);
+    });
+
     if (bigIdUsername) {
       it(`should include a big gid [${bigId}] in the gids of [${bigIdUsername}]`, () => {
         userid.gids(bigIdUsername).should.containEql(bigId);
