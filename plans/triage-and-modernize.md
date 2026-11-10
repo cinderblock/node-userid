@@ -17,7 +17,7 @@
 ## Findings / gotchas
 
 - **npm has been stuck at 1.2.5 (published 2021-07-14) for 4+ years.** Git has tags up to `v1.2.41`, but versions 1.2.6–1.2.41 were never published. The auto-publish step in `update.yml` sets `NPM_TOKEN` in the environment but never writes an `.npmrc` that uses it, so `npm publish` could not authenticate. As a result, **the BSD fix from PR #7 has never shipped.** (The long-username fix from PR #4, Jan 2021, did ship, in 1.2.0+.)
-- **Main CI is red.** The most recent run (2026-11-06, on `nook-2021-wip`) failed with `TS2339: Property 'should' does not exist on type 'number'`. That's ts-node + `should` typings drift, caused by the unpinned `npm install` of the test fixture.
+- **Main CI was red.** The most recent run (2026-11-06, on `nook-2021-wip`) failed with `TS2339: Property 'should' does not exist on type 'number'`. That's specific to that old branch's test setup; the real `master` breakages are listed below.
 - ~~`username()` / `groupname()` use `Int32Value()`, so IDs ≥ 2³¹ break.~~ **Wrong, verified 2026-11-10:** `napi_get_value_int32` applies ECMAScript `ToInt32` (modular), so 3000000000 → -1294967296 → `uid_t` 3000000000 again. In WSL, a user/group created with id 3000000000 resolves correctly through every function. No code fix is needed; it gets a regression test instead. (2.0 still adds input validation: reject non-integers and values outside `[0, 2³²)`.)
 - WSL has a test user `biguidusername` (uid 3000000000) in group `biggroupname` (gid 3000000000). `make` and `clang-tidy` 18 were installed through apt (`wsl -u root` works without a password; plain `sudo` asks for one).
 - On macOS, `gids()` returns gids as signed `int` (e.g. `nobody` → `-2`). macOS's own `id -G` also prints `-2`, so that matches the platform. Leave it.
@@ -29,6 +29,11 @@
 - **Bun as a consumer:** Bun does not run dependency lifecycle scripts unless the package is in `trustedDependencies`. Today `bun add userid` produces no binary. Prebuilds that are loaded at runtime fix this without needing the install script.
 - PR #8 renames the package to `@hershbergien/userid`, points `repository`/badges at the fork, and keeps the dead `bindings` dependency. It also uses `macos-13` (Intel runners have since been retired) and the unmaintained `addnab/docker-run-action`. The approach is right, but it can't merge as-is.
 - Branch `nook-2021-wip` (a 2021 WIP commit) was pushed to origin on 2026-11-06, probably by another session. Leaving it alone.
+- **CI breakages found while fixing `v1` (2026-11-10):**
+  - node-gyp 9 imports Python `distutils`, which Python 3.12 removed. That broke the macOS and FreeBSD runners (`ModuleNotFoundError: No module named 'distutils'`). Linux survived only because the runner's Python ships setuptools. Fixed with node-gyp 13. Consumers were never affected: npm uses its own bundled node-gyp, and the packed-tarball job passed on macOS throughout.
+  - On Node 26, mocha 9 fails with `ReferenceError: require is not defined in ES module scope` from `node_modules/yargs/yargs`. Node 26 detects mocha 9's extensionless, old `yargs` file as ESM. It is **not** Node's TypeScript stripping: `--no-experimental-strip-types` doesn't help. Fixed with mocha 11.
+  - The runner's clang-tidy errors inside node-addon-api 4.3's `napi.h` (`in-class initializer for static data member is not a constant expression`). Local clang-tidy 18 only warns. `.clang-tidy`'s `WarningsAsErrors: true` is not a glob, so it never failed on warnings anyway. A full run takes about 36 s per file because `src/.clang-tidy` enables `*`. clang-tidy was dropped from `v1` CI; 2.0 brings it back with a curated check list.
+  - **Real bug, found by the new FreeBSD job:** `gids('root')` returned `[0, 0, 5]`. BSD `getgrouplist` always inserts the base gid and lists it again when the user is a member of it. Fixed on `v1` by deduping in order (`1f862ef`).
 
 ## Triage
 
@@ -80,7 +85,19 @@
 - [x] Fetch; fast-forward local master to `e1fa50a`
 - [x] Read all issues, PRs, branches, CI state, npm state
 - [x] Triage and plan written; user signed off 2026-11-09
-- [ ] **Phase A: 1.3.0 on branch `v1`** (current). Branch from `master`. Add a big-id regression test, replace the stale workflows with a working CI, add `release.yml` (tag `v1.*` → `npm publish --provenance` via trusted publishing) and a `prepublishOnly` CI guard. Keep `package-lock.json` on `v1` to keep the maintenance diff minimal; Bun lands in 2.0.
+- [x] **Phase A: 1.3.0 on branch `v1`**, pushed, all 13 CI jobs green ([run 42901682602](https://github.com/cinderblock/node-userid/actions/runs/42901682602)). Commits `42b2eff`..`96cba6e`:
+  - big-id tests
+  - `ci.yml`, which replaces `main.yml`/`update.yml`/`versions.yml`
+  - `release.yml`: on a `v*` tag, runs CI, then `npm publish --provenance` via trusted publishing (environment `npm`). It picks the dist-tag automatically: `latest`, `next` for prereleases, or `v<major>-latest` for an older major.
+  - the `scripts/guard-publish.cjs` prepublishOnly guard
+  - node-gyp 13 + mocha 11
+  - the `gids()` dedupe fix
+  - CHANGELOG, and the version bump to 1.3.0
+  - `package-lock.json` stays on `v1`; Bun lands in 2.0.
+- [x] `v1` merged into `modernize` (`9701c60`), so 2.0 builds on 1.3.0.
+- [ ] **Publish 1.3.0 (user)**: configure npm trusted publishing (walked through one step at a time), then the user OKs pushing tag `v1.3.0`.
+- [ ] Fast-forward `master` to `v1`? (ask the user)
+- [ ] **Phase B: 2.0 on `modernize`** (current)
 - [ ] Step 1 native layer
 - [ ] Step 2 prebuilds
 - [ ] Steps 3–6 package shape + tests
