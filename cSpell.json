@@ -3,6 +3,13 @@
   "language": "en",
   "ignorePaths": ["build/", "package-lock.json"],
   "words": [
+    "biggroupname",
+    "biguidusername",
+    "getgrgid",
+    "getgrouplist",
+    "guhaoyu",
+    "uids",
+    "unistd",
     "Napi",
     "cinderblock",
     "Tacklind",

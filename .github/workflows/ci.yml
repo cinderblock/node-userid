@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_COLOR: 1
+  # Test fixtures created on Linux and FreeBSD runners
+  LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
+  LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
+  BIG_ID: 3000000000
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+        node: [22, 24, 26]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies and build
+        run: npm ci
+
+      - name: Create test users and groups (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo useradd "$LONG_USERNAME_TEST"
+          sudo useradd "$LONG_GROUPNAME_TEST"
+          sudo groupadd -g "$BIG_ID" biggroupname
+          sudo useradd -M -N -g "$BIG_ID" -u "$BIG_ID" biguidusername
+          echo "BIG_ID_USERNAME=biguidusername" >> "$GITHUB_ENV"
+          echo "BIG_ID_GROUPNAME=biggroupname" >> "$GITHUB_ENV"
+
+      - name: Clear long-name fixtures (macOS has none)
+        if: runner.os == 'macOS'
+        run: |
+          echo "LONG_USERNAME_TEST=" >> "$GITHUB_ENV"
+          echo "LONG_GROUPNAME_TEST=" >> "$GITHUB_ENV"
+
+      - name: Test JavaScript API
+        run: npm test
+
+      # We fully support requiring the native `.node` file directly.
+      # For historical reasons its `uid` export matches `ids`, so it gets slightly different tests.
+      - name: Test native API
+        run: npm test
+        env:
+          MOCHA_IMPORT_OVERRIDE: ../build/Release/userid.node
+          MOCHA_USE_NODE_API: true
+
+  packed:
+    name: Install packed tarball (${{ matrix.os }})
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Install dev dependencies without building
+        run: npm ci --ignore-scripts
+
+      - name: Pack
+        run: npm pack --ignore-scripts
+
+      - name: Install the tarball into a scratch project (builds from source)
+        run: |
+          mkdir -p "$RUNNER_TEMP/consumer"
+          cd "$RUNNER_TEMP/consumer"
+          echo '{}' > package.json
+          npm install "$GITHUB_WORKSPACE"/userid-*.tgz
+
+      - name: Clear long-name fixtures
+        run: |
+          echo "LONG_USERNAME_TEST=" >> "$GITHUB_ENV"
+          echo "LONG_GROUPNAME_TEST=" >> "$GITHUB_ENV"
+
+      - name: Run tests against the installed package
+        run: npm test
+        env:
+          MOCHA_IMPORT_OVERRIDE: ${{ runner.temp }}/consumer/node_modules/userid
+
+  freebsd:
+    name: FreeBSD
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build and test in a FreeBSD VM
+        uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
+        with:
+          envs: FORCE_COLOR LONG_USERNAME_TEST LONG_GROUPNAME_TEST
+          usesh: true
+          prepare: |
+            pkg install -y node24 npm-node24 python3 gmake
+            pw useradd "$LONG_USERNAME_TEST"
+            pw useradd "$LONG_GROUPNAME_TEST"
+          run: |
+            npm ci
+            npm test
+
+  checks:
+    # clang-tidy is not run on v1: the runner's clang rejects node-addon-api 4.3's headers.
+    # 2.0 updates node-addon-api and brings linting back.
+    name: Formatting and spelling
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Install dependencies without building
+        run: npm ci --ignore-scripts
+
+      - name: Formatting
+        # Any line endings are fine locally, but only LF is committed
+        run: npm run prettier -- --end-of-line lf
+
+      - name: Spelling
+        run: npm run spelling

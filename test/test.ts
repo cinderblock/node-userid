@@ -30,7 +30,22 @@ const longUsernameUid = longUsername ? Number(execToString(`id -u ${longUsername
 const longGroupname = process.env.LONG_GROUPNAME_TEST;
 const longGroupnameGid = longGroupname ? Number(execToString(`id -g ${longGroupname}`)) : -1;
 
+// IDs above 2^31 must round-trip. Set up with something like:
+//   groupadd -g 3000000000 biggroupname && useradd -M -N -g 3000000000 -u 3000000000 biguidusername
+const bigIdUsername = process.env.BIG_ID_USERNAME;
+const bigIdGroupname = process.env.BIG_ID_GROUPNAME;
+const bigId = Number(process.env.BIG_ID ?? 3000000000);
+
 function testIdsMethod() {
+  if (bigIdUsername) {
+    it(`should load a big uid and gid [${bigId}] by username [${bigIdUsername}]`, () => {
+      const libIds = userid.ids(bigIdUsername);
+
+      libIds.uid.should.equal(bigId);
+      libIds.gid.should.equal(bigId);
+    });
+  }
+
   it(`should load a user's uid [${shellUid}] and gid [${shellGid}] by username [${shellUsername}] as an object`, () => {
     const libIds = userid.ids(shellUsername);
 
@@ -86,6 +101,12 @@ describe('userid', () => {
       });
     }
 
+    if (bigIdUsername) {
+      it(`should load a username [${bigIdUsername}] by a big uid [${bigId}]`, () => {
+        userid.username(bigId).should.equal(bigIdUsername);
+      });
+    }
+
     itShouldHandleErrorsConsistently(userid.username, 'number', 'uid', 'uid not found');
   });
 
@@ -97,6 +118,12 @@ describe('userid', () => {
     if (longGroupname) {
       it(`should work with a long groupname [${longGroupname}] that exists`, () => {
         userid.gid(longGroupname).should.equal(longGroupnameGid);
+      });
+    }
+
+    if (bigIdGroupname) {
+      it(`should load a big gid [${bigId}] by group name [${bigIdGroupname}]`, () => {
+        userid.gid(bigIdGroupname).should.equal(bigId);
       });
     }
 
@@ -114,6 +141,12 @@ describe('userid', () => {
       });
     }
 
+    if (bigIdGroupname) {
+      it(`should load a group name [${bigIdGroupname}] by a big gid [${bigId}]`, () => {
+        userid.groupname(bigId).should.equal(bigIdGroupname);
+      });
+    }
+
     itShouldHandleErrorsConsistently(userid.groupname, 'number', 'gid', 'gid not found');
   });
 
@@ -121,6 +154,18 @@ describe('userid', () => {
     it(`should load a list of gids [${shellGids}] by username [${shellUsername}]`, () => {
       userid.gids(shellUsername).sort().should.deepEqual(shellGids);
     });
+
+    it(`should not list any gid twice for username [${shellUsername}]`, () => {
+      const gids = userid.gids(shellUsername);
+
+      gids.length.should.equal(new Set(gids).size);
+    });
+
+    if (bigIdUsername) {
+      it(`should include a big gid [${bigId}] in the gids of [${bigIdUsername}]`, () => {
+        userid.gids(bigIdUsername).should.containEql(bigId);
+      });
+    }
 
     // TODO: test for a long username
     // TODO: test for a long groupname in returned list
