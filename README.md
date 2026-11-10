@@ -2,9 +2,8 @@
 
 Simple Node.js library with native bindings for getting uid and gid information.
 
-[![](https://github.com/cinderblock/node-userid/workflows/Main/badge.svg)](https://github.com/cinderblock/node-userid/actions)
-[![](https://github.com/cinderblock/node-userid/workflows/Test%20All%20Versions/badge.svg)](https://github.com/cinderblock/node-userid/actions)
-[![Coverage Status](https://coveralls.io/repos/github/cinderblock/node-userid/badge.svg?branch=master)](https://coveralls.io/github/cinderblock/node-userid?branch=master)
+[![CI](https://github.com/cinderblock/node-userid/actions/workflows/ci.yml/badge.svg)](https://github.com/cinderblock/node-userid/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/userid)](https://www.npmjs.com/package/userid)
 
 ## Installation
 
@@ -14,8 +13,9 @@ $ npm install userid
 $ npm install cinderblock/node-userid
 ```
 
-This relies on GNU `getgrname` and `getgrid`.
-Works on POSIX systems only.
+This uses the POSIX user and group database functions (`getpwnam`, `getgrgid`, `getgrouplist`, ...), so it sees the same users as `id` and `getent`, including NSS sources like LDAP.
+Tested on Linux (glibc, x64 and arm64), macOS, and FreeBSD with Node.js 22, 24, and 26.
+It builds from source on install, so it needs a C++ toolchain and Python (see [node-gyp](https://github.com/nodejs/node-gyp#installation)).
 This package is not useful on Windows.
 
 ## Usage
@@ -71,9 +71,7 @@ Pull requests that would bring Windows into the fold would be welcome.
 ### Improvements to be made
 
 - Publish pre-built versions of packages
-- Don't depend on coveralls for coverage reports (maybe with [Standalone Stats](https://github.com/cinderblock/github-action-standalone-stats))
 - Implement any `TODO`s found in the sources or tests
-- Automatic testing of latest versions of Node/OSes
 - Windows compatibility?
   - WSL
   - Windows equivalent native methods
