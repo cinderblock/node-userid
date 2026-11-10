@@ -39,7 +39,8 @@
     "coverage": "nyc --reporter=lcov --reporter=text mocha",
     "install": "npm run build",
     "clean": "node-gyp clean",
-    "build": "node-gyp rebuild"
+    "build": "node-gyp rebuild",
+    "prepublishOnly": "node scripts/guard-publish.cjs"
   },
   "gypfile": true,
   "dependencies": {

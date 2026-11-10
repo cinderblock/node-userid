@@ -1,0 +1,69 @@
+name: Release
+
+# Publishes to npm when a version tag (`v1.2.3`) is pushed.
+# Authentication uses npm trusted publishing (OIDC): no npm token is stored anywhere.
+# The package must have this repository + `release.yml` configured as a trusted publisher on npmjs.com.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish to npm
+    needs: ci
+    runs-on: ubuntu-latest
+
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/userid
+
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing + provenance
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          # npm >= 11.5.1 is required for trusted publishing
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Check that the tag matches package.json
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+            exit 1
+          fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Choose dist-tag
+        # Prereleases (`1.2.3-beta.1`) get `next`.
+        # A release only takes `latest` if it is not older than the current `latest`.
+        # Maintenance releases of an older major get `v<major>-latest` instead.
+        run: |
+          current="$(npm view userid dist-tags.latest 2>/dev/null || echo 0.0.0)"
+          tag="$(node -e '
+            const [a, b] = process.argv.slice(1).map(v => v.split(/[.-]/).slice(0, 3).map(Number));
+            const cmp = a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+            if (process.argv[1].includes("-")) console.log("next");
+            else console.log(cmp >= 0 ? "latest" : `v${a[0]}-latest`);
+          ' "$VERSION" "$current")"
+          echo "Publishing $VERSION as '$tag' (current latest: $current)"
+          echo "DIST_TAG=$tag" >> "$GITHUB_ENV"
+
+      - name: Install dependencies without building
+        run: npm ci --ignore-scripts
+
+      - name: Publish
+        run: npm publish --provenance --access public --tag "$DIST_TAG"

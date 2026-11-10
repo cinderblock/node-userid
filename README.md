@@ -87,6 +87,12 @@ Since Jen has not responded to any attempts at contact, I requested that Npm tra
 Version 1.0.0 switched to N-API, the forward compatible interface that should be, all around, much nicer moving forward.
 It also signals the change to using Github Actions to run all our full coverage tests on all supported platforms.
 
+## Releasing
+
+Releases are published by [CI](.github/workflows/release.yml), never from a developer machine.
+Bump the version in `package.json`, commit, then push a matching tag (`git tag v1.2.3 && git push origin v1.2.3`).
+The workflow runs the full test suite and then publishes with [provenance](https://docs.npmjs.com/generating-provenance-statements) through npm trusted publishing.
+
 ## License
 
 The license, when the package was created, had some mix of GLPv3 and Public Domain.
