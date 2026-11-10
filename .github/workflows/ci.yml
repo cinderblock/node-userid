@@ -127,7 +127,9 @@ jobs:
             npm test
 
   checks:
-    name: Formatting, spelling, and linting
+    # clang-tidy is not run on v1: the runner's clang rejects node-addon-api 4.3's headers.
+    # 2.0 updates node-addon-api and brings linting back.
+    name: Formatting and spelling
     runs-on: ubuntu-latest
 
     steps:
@@ -137,11 +139,8 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install clang-tidy
-        run: sudo apt-get install -y clang-tidy
-
-      - name: Install dependencies and build
-        run: npm ci
+      - name: Install dependencies without building
+        run: npm ci --ignore-scripts
 
       - name: Formatting
         # Any line endings are fine locally, but only LF is committed
@@ -149,6 +148,3 @@ jobs:
 
       - name: Spelling
         run: npm run spelling
-
-      - name: Lint
-        run: npm run lint
