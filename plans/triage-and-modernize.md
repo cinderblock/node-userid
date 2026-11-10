@@ -11,6 +11,7 @@
 - Local `master` was fast-forwarded on 2026-11-09 from `6452dfb` (1.2.34) to `e1fa50a` (merge of PR #7). Repo `package.json` says `1.2.41`.
 - npm package: [`userid`](https://www.npmjs.com/package/userid). Sole maintainer is `cinderblock`.
 - The addon already uses **node-addon-api 4.3** (C++ wrapper over Node-API). It is not nan or raw V8. Loaded with `bindings`.
+- Local tooling: Windows has Node 26.12.1, Bun 1.4.2, npm 11.20.0. POSIX builds and tests run in **WSL Ubuntu 24.04** (g++ 13.3, Python 3.12). Node and Bun are installed user-locally there. Tests run in a WSL-native mirror at `~/node-userid`, synced from the Windows checkout, so Linux `node_modules`/`build/` never land in the Windows tree.
 - CI: `.github/workflows/main.yml` (active), `update.yml` and `versions.yml` (both `disabled_inactivity`). Dependabot alerts are disabled on the repo.
 
 ## Findings / gotchas
@@ -46,6 +47,14 @@
 
 - Install and lockfile use **Bun** (`bun.lock`, no `package-lock.json`). The test matrix runs on **Node**. Publishing is `npm publish --provenance` **from CI only**, never from a CLI (per the `publishing` skill).
 - Check with the user before merging PRs, closing issues/PRs, or publishing to npm. Pushing to our own branches is fine.
+- User sign-off received 2026-11-09 on the whole plan below. Answers to the open questions:
+  1. Node floor `>=22.12`: yes.
+  2. Windows: install everywhere, throw on call: yes.
+  3. Coverage: "whatever". Decision: drop Coveralls and C++ gcov.
+  4. Async (Promise) API: yes, as a follow-up after 2.0.0.
+  5. Re-implement PR #8 with Co-authored-by credit, then close it with a thank-you: yes (still confirm the exact comment text before posting).
+  6. Ship a **1.x maintenance release first** so `^1` users get the BSD fix: yes. Plan: `v1` branch off `master`, minimal fixes, version `1.3.0`, published by the new CI release workflow.
+- Binary hosting: prebuildify bundles binaries **inside the npm tarball**, so there is no third-party host and nothing goes on GitHub Release assets. The user's condition ("unless they have their own binary hosts") is satisfied.
 
 ## Proposed modernization (pending user sign-off)
 
@@ -67,7 +76,8 @@
 
 - [x] Fetch; fast-forward local master to `e1fa50a`
 - [x] Read all issues, PRs, branches, CI state, npm state
-- [x] Triage and plan written. **Current step: waiting on user review.**
+- [x] Triage and plan written; user signed off 2026-11-09
+- [ ] **Phase A: 1.3.0 on branch `v1`** (current). Branch from `master`. Fix `Uint32` IDs, fix the CI test typings, add `release.yml` (tag `v1.*` → `npm publish --provenance` via trusted publishing) and a `prepublishOnly` CI guard. Keep `package-lock.json` on `v1` to keep the maintenance diff minimal; Bun lands in 2.0.
 - [ ] Step 1 native layer
 - [ ] Step 2 prebuilds
 - [ ] Steps 3–6 package shape + tests
