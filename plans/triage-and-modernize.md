@@ -18,7 +18,10 @@
 
 - **npm has been stuck at 1.2.5 (published 2021-07-14) for 4+ years.** Git has tags up to `v1.2.41`, but versions 1.2.6–1.2.41 were never published. The auto-publish step in `update.yml` sets `NPM_TOKEN` in the environment but never writes an `.npmrc` that uses it, so `npm publish` could not authenticate. As a result, **the BSD fix from PR #7 has never shipped.** (The long-username fix from PR #4, Jan 2021, did ship, in 1.2.0+.)
 - **Main CI is red.** The most recent run (2026-11-06, on `nook-2021-wip`) failed with `TS2339: Property 'should' does not exist on type 'number'`. That's ts-node + `should` typings drift, caused by the unpinned `npm install` of the test fixture.
-- **`username()` / `groupname()` use `Int32Value()`**, so IDs ≥ 2³¹ break. Example: macOS `nobody` is uid `4294967294` (-2). This needs `Uint32Value()` and range validation.
+- ~~`username()` / `groupname()` use `Int32Value()`, so IDs ≥ 2³¹ break.~~ **Wrong, verified 2026-11-10:** `napi_get_value_int32` applies ECMAScript `ToInt32` (modular), so 3000000000 → -1294967296 → `uid_t` 3000000000 again. In WSL, a user/group created with id 3000000000 resolves correctly through every function. No code fix is needed; it gets a regression test instead. (2.0 still adds input validation: reject non-integers and values outside `[0, 2³²)`.)
+- WSL has a test user `biguidusername` (uid 3000000000) in group `biggroupname` (gid 3000000000). `make` and `clang-tidy` 18 were installed through apt (`wsl -u root` works without a password; plain `sudo` asks for one).
+- On macOS, `gids()` returns gids as signed `int` (e.g. `nobody` → `-2`). macOS's own `id -G` also prints `-2`, so that matches the platform. Leave it.
+- `master` builds and passes all 24 tests on Linux with Node 24.22 when installed from the lockfile (`npm ci`).
 - **Non-reentrant libc calls** (`getpwnam`, `getgrgid`, …) are unsafe with `worker_threads`. The `thread-safe` branch fixes this with the `_r` variants.
 - **Bug in the `thread-safe` / `no-MACOSX_DEPLOYMENT_TARGET` branches:** after `getgrouplist` they do `groups.resize(foundGroups)`. On macOS and the BSDs, `getgrouplist` returns **0** on success, not the count, so `gids()` would return `[]`. Use the `ngroups` out-param instead. Master avoids this by accident, because it loops to `ngroups`.
 - `binding.gyp` uses `<!@(ls -1 src/*.cc)` and `<!(echo $GENERATE_COVERAGE)`. Neither works on Windows.
@@ -58,7 +61,7 @@
 
 ## Proposed modernization (pending user sign-off)
 
-1. **Native layer.** Stay on node-addon-api (bump to 8.x) and pin `NAPI_VERSION=8`. The C++ wrapper is the right tool here, and the raw C API would add boilerplate for no gain. Use node-addon-api's `node_addon_api_except` gyp target. List the sources explicitly. Bring in the `_r` reentrant code from `thread-safe`, fix the `Uint32` and `getgrouplist` bugs, and make error messages consistent with an errno `code`. Keep node-gyp as the build tool for now, since prebuildify drives it. Moving to cmake-js or similar is a later item.
+1. **Native layer.** Stay on node-addon-api (bump to 8.x) and pin `NAPI_VERSION=8`. The C++ wrapper is the right tool here, and the raw C API would add boilerplate for no gain. Use node-addon-api's `node_addon_api_except` gyp target. List the sources explicitly. Bring in the `_r` reentrant code from `thread-safe`, fix that branch's `getgrouplist` bug, validate id arguments (integer in `[0, 2³²)`), and make error messages consistent with an errno `code`. Keep node-gyp as the build tool for now, since prebuildify drives it. Moving to cmake-js or similar is a later item.
 2. **Prebuilt binaries.** Use `prebuildify --napi --strip` (+ `--tag-libc`, `--tag-armv`) and load with `node-gyp-build`, bundled inside the npm tarball. Drop `bindings`. Node-API means one binary per platform works on every Node version. Targets: linux x64/arm64 (glibc + musl), linux armv7 glibc, darwin arm64 + x64 (cross-compiled from the arm64 runner, or on `macos-15-intel`), freebsd x64 (VM action). Builds from source still work as a fallback on anything else.
 3. **Node versions.** Set `engines: ">=22.12"` and test on 22 / 24 / 26 on Linux + macOS. Node 20 went EOL on 2026-04-30. The Node-API binary will still *load* on older versions; we just won't claim support. Add a non-blocking Bun-runtime smoke job.
 4. **Module format and types.** Keep a CJS core (native addons load through `require` anyway), plus a thin ESM wrapper with named exports. Add an `exports` map with `types`/`import`/`require` conditions. Write the wrapper in TypeScript and emit `.d.ts`. Verify with `@arethetypeswrong/cli` and `publint` in CI. The API stays the same: `ids`, `uid`, `gid`, `gids`, `username`, `groupname`.
@@ -77,7 +80,7 @@
 - [x] Fetch; fast-forward local master to `e1fa50a`
 - [x] Read all issues, PRs, branches, CI state, npm state
 - [x] Triage and plan written; user signed off 2026-11-09
-- [ ] **Phase A: 1.3.0 on branch `v1`** (current). Branch from `master`. Fix `Uint32` IDs, fix the CI test typings, add `release.yml` (tag `v1.*` → `npm publish --provenance` via trusted publishing) and a `prepublishOnly` CI guard. Keep `package-lock.json` on `v1` to keep the maintenance diff minimal; Bun lands in 2.0.
+- [ ] **Phase A: 1.3.0 on branch `v1`** (current). Branch from `master`. Add a big-id regression test, replace the stale workflows with a working CI, add `release.yml` (tag `v1.*` → `npm publish --provenance` via trusted publishing) and a `prepublishOnly` CI guard. Keep `package-lock.json` on `v1` to keep the maintenance diff minimal; Bun lands in 2.0.
 - [ ] Step 1 native layer
 - [ ] Step 2 prebuilds
 - [ ] Steps 3–6 package shape + tests
@@ -100,5 +103,6 @@
 
 - Don't `npm publish` from a CLI. Not "just this once", and not to unstick the 1.2.5 situation.
 - Don't merge PR #8 as-is (package rename).
+- Don't "fix" `Int32Value` → `Uint32Value` as a bug fix. It already works (see Findings).
 - Don't trust `resize(foundGroups)` after `getgrouplist` (macOS/BSD return 0).
 - Don't touch `nook-2021-wip`.
