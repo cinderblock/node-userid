@@ -1,3 +1,7 @@
 build/
+native/build/
+dist/
+prebuilds/
+node_modules/
+*.tgz
 *.swp
-node_modules

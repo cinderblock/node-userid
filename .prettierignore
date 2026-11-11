@@ -1,7 +1,5 @@
+/native/build/
+/dist/
+/prebuilds/
 /node_modules/
-/src/
-/.editorconfig
-/build/
-/.gitignore
-/.prettierignore
-/binding.gyp
+bun.lock
