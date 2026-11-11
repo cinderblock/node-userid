@@ -306,7 +306,8 @@ jobs:
           name: package
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
-      - name: Install and test in node:24-bookworm-slim on arm/v7 (no compiler in the image)
+      # Node.js 24 dropped official 32-bit ARM builds, so test with 22 (our oldest supported line)
+      - name: Install and test in node:22-bookworm-slim on arm/v7 (no compiler in the image)
         run: |
-          docker run --rm --platform linux/arm/v7 -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:24-bookworm-slim \
+          docker run --rm --platform linux/arm/v7 -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:22-bookworm-slim \
             bash -ec 'scripts/smoke-test-package.sh userid-*.tgz npm'

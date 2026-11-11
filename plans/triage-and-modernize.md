@@ -37,19 +37,19 @@
 
 ## Triage
 
-| # | Kind | State | Recommendation |
-| --- | --- | --- | --- |
-| [#8](https://github.com/cinderblock/node-userid/pull/8) prebuildify (matthewh) | PR | open | **Revisit → re-implement and close with credit.** Reuse its release matrix in our own branch (Co-authored-by Matthew), then close #8 with a thank-you comment. Don't merge: it renames the package, changes repository URLs, and targets a retired runner. |
-| [#7](https://github.com/cinderblock/node-userid/pull/7) BSD `unistd.h` | PR | merged | Done in code, **never published**. Ships with the first CI release. Add a FreeBSD build to CI so it stays fixed. |
-| [#6](https://github.com/cinderblock/node-userid/pull/6) | PR | closed (superseded by #7) | Nothing to do. |
-| [#4](https://github.com/cinderblock/node-userid/pull/4) 15-char usernames | PR | merged, shipped | Nothing to do. Keep its long-name CI tests. |
-| [#5](https://github.com/cinderblock/node-userid/issues/5) allow yarn | issue | closed | Already resolved (the engines block is gone). The underlying request ("installs with any package manager") still matters: prebuilds + Bun/yarn/pnpm install smoke tests cover it. No reopen. |
-| [#3](https://github.com/cinderblock/node-userid/issues/3) | issue | closed, fixed by #4 | Nothing to do. |
-| [#2](https://github.com/cinderblock/node-userid/issues/2), [#1](https://github.com/cinderblock/node-userid/issues/1) | issue | closed (old nan versions) | Nothing to do. |
-| Dependabot PRs | — | none exist | Dependabot isn't configured. Add `dependabot.yml` (see plan). |
-| `thread-safe`, `no-MACOSX_DEPLOYMENT_TARGET` | branches | unmerged WIP (2022, master merged in 2025-02) | **Salvage the C++ only:** reentrant `_r` calls, `checkError` with `strerror_r`, the Windows mocks header, `std::vector` buffers. Fix the `getgrouplist` bug above. Drop their tooling churn (eslint 8, cspell 5, mocha), which this plan replaces. Then delete both branches. |
-| `test-no-MACOSX_DEPLOYMENT_TARGET` | branch | fully contained in `no-MACOSX_DEPLOYMENT_TARGET` | Delete. |
-| `nook-2021-wip` | branch | recently pushed by someone | Leave it. Ask whoever pushed it. |
+| #                                                                                                                    | Kind     | State                                            | Recommendation                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [#8](https://github.com/cinderblock/node-userid/pull/8) prebuildify (matthewh)                                       | PR       | open                                             | **Revisit → re-implement and close with credit.** Reuse its release matrix in our own branch (Co-authored-by Matthew), then close #8 with a thank-you comment. Don't merge: it renames the package, changes repository URLs, and targets a retired runner.                    |
+| [#7](https://github.com/cinderblock/node-userid/pull/7) BSD `unistd.h`                                               | PR       | merged                                           | Done in code, **never published**. Ships with the first CI release. Add a FreeBSD build to CI so it stays fixed.                                                                                                                                                              |
+| [#6](https://github.com/cinderblock/node-userid/pull/6)                                                              | PR       | closed (superseded by #7)                        | Nothing to do.                                                                                                                                                                                                                                                                |
+| [#4](https://github.com/cinderblock/node-userid/pull/4) 15-char usernames                                            | PR       | merged, shipped                                  | Nothing to do. Keep its long-name CI tests.                                                                                                                                                                                                                                   |
+| [#5](https://github.com/cinderblock/node-userid/issues/5) allow yarn                                                 | issue    | closed                                           | Already resolved (the engines block is gone). The underlying request ("installs with any package manager") still matters: prebuilds + Bun/yarn/pnpm install smoke tests cover it. No reopen.                                                                                  |
+| [#3](https://github.com/cinderblock/node-userid/issues/3)                                                            | issue    | closed, fixed by #4                              | Nothing to do.                                                                                                                                                                                                                                                                |
+| [#2](https://github.com/cinderblock/node-userid/issues/2), [#1](https://github.com/cinderblock/node-userid/issues/1) | issue    | closed (old nan versions)                        | Nothing to do.                                                                                                                                                                                                                                                                |
+| Dependabot PRs                                                                                                       | —        | none exist                                       | Dependabot isn't configured. Add `dependabot.yml` (see plan).                                                                                                                                                                                                                 |
+| `thread-safe`, `no-MACOSX_DEPLOYMENT_TARGET`                                                                         | branches | unmerged WIP (2022, master merged in 2025-02)    | **Salvage the C++ only:** reentrant `_r` calls, `checkError` with `strerror_r`, the Windows mocks header, `std::vector` buffers. Fix the `getgrouplist` bug above. Drop their tooling churn (eslint 8, cspell 5, mocha), which this plan replaces. Then delete both branches. |
+| `test-no-MACOSX_DEPLOYMENT_TARGET`                                                                                   | branch   | fully contained in `no-MACOSX_DEPLOYMENT_TARGET` | Delete.                                                                                                                                                                                                                                                                       |
+| `nook-2021-wip`                                                                                                      | branch   | recently pushed by someone                       | Leave it. Ask whoever pushed it.                                                                                                                                                                                                                                              |
 
 ## Decisions already made (don't re-ask)
 
@@ -68,7 +68,7 @@
 
 1. **Native layer.** Stay on node-addon-api (bump to 8.x) and pin `NAPI_VERSION=8`. The C++ wrapper is the right tool here, and the raw C API would add boilerplate for no gain. Use node-addon-api's `node_addon_api_except` gyp target. List the sources explicitly. Bring in the `_r` reentrant code from `thread-safe`, fix that branch's `getgrouplist` bug, validate id arguments (integer in `[0, 2³²)`), and make error messages consistent with an errno `code`. Keep node-gyp as the build tool for now, since prebuildify drives it. Moving to cmake-js or similar is a later item.
 2. **Prebuilt binaries.** Use `prebuildify --napi --strip` (+ `--tag-libc`, `--tag-armv`) and load with `node-gyp-build`, bundled inside the npm tarball. Drop `bindings`. Node-API means one binary per platform works on every Node version. Targets: linux x64/arm64 (glibc + musl), linux armv7 glibc, darwin arm64 + x64 (cross-compiled from the arm64 runner, or on `macos-15-intel`), freebsd x64 (VM action). Builds from source still work as a fallback on anything else.
-3. **Node versions.** Set `engines: ">=22.12"` and test on 22 / 24 / 26 on Linux + macOS. Node 20 went EOL on 2026-04-30. The Node-API binary will still *load* on older versions; we just won't claim support. Add a non-blocking Bun-runtime smoke job.
+3. **Node versions.** Set `engines: ">=22.12"` and test on 22 / 24 / 26 on Linux + macOS. Node 20 went EOL on 2026-04-30. The Node-API binary will still _load_ on older versions; we just won't claim support. Add a non-blocking Bun-runtime smoke job.
 4. **Module format and types.** Keep a CJS core (native addons load through `require` anyway), plus a thin ESM wrapper with named exports. Add an `exports` map with `types`/`import`/`require` conditions. Write the wrapper in TypeScript and emit `.d.ts`. Verify with `@arethetypeswrong/cli` and `publint` in CI. The API stays the same: `ids`, `uid`, `gid`, `gids`, `username`, `groupname`.
 5. **Windows.** Remove `os: ["!win32"]` so the package installs everywhere. On win32 the module loads without a binary, exports `isSupported: false`, and every function throws an `Error` with `code: 'ERR_USERID_UNSUPPORTED_PLATFORM'`. The install script becomes a small `scripts/install.cjs` that does nothing on win32 and otherwise runs `node-gyp-build`. CI runs on `windows-latest` to prove install + import + throw. Every platform also gets `isSupported`.
 6. **Tests.** Replace mocha + ts-node + should + nyc with `node:test` + `node:assert`, using TypeScript tests run through Node's built-in type stripping. Keep the long-username/groupname tests on Linux and the "native API stability" test. Add tests for large uids, an unknown user, and calls from a `worker_threads` worker. C++ coverage via gcov/lcov becomes optional (see question 3).
@@ -95,26 +95,27 @@
   - CHANGELOG, and the version bump to 1.3.0
   - `package-lock.json` stays on `v1`; Bun lands in 2.0.
 - [x] `v1` merged into `modernize` (`9701c60`), so 2.0 builds on 1.3.0.
-- [ ] **Publish 1.3.0 (user)**: configure npm trusted publishing (walked through one step at a time), then the user OKs pushing tag `v1.3.0`.
-- [ ] Fast-forward `master` to `v1`? (ask the user)
+- [x] **Published 1.3.0** (2026-11-10). The user configured trusted publishing (`cinderblock`/`node-userid`/`release.yml`/env `npm`, Allow npm publish checked, Allow npm dist-tag unchecked) and OK'd the tag. [Release run 42926720280](https://github.com/cinderblock/node-userid/actions/runs/42926720280). npm shows `latest: 1.3.0` with SLSA provenance. The registry took about 7½ minutes to show it after `+ userid@1.3.0` ("Your package is being processed").
+- [x] `master` fast-forwarded to `v1` (`96cba6e`), with the user's OK.
 - [ ] **Phase B: 2.0 on `modernize`** (current)
-- [ ] Step 1 native layer
-- [ ] Step 2 prebuilds
-- [ ] Steps 3–6 package shape + tests
-- [ ] Step 7 CI + release workflow
-- [ ] User configures npm trusted publishing for `userid` (manual, npmjs.com)
-- [ ] Close PR #8 with credit (needs user OK)
-- [ ] Delete salvaged branches (needs user OK)
-- [ ] Tag v2.0.0 → CI publishes (needs user OK)
+  - [x] Native rewrite, TypeScript wrapper, ESM + CJS, Windows behavior, node:test suite, Bun tooling: `26feba8`
+  - [x] CI with prebuilds, a pack job, consumer installs, and a release that publishes the tested tarball: `39c7cfa`
+  - [x] README + CHANGELOG for 2.0
+  - [ ] **pnpm decision (waiting on user)**, see Open questions 1
+  - [ ] armv7 consumer test on the Node 22 image (fix pushed; confirm on CI)
+  - [ ] Version bump to 2.0.0, then the user OKs the `v2.0.0` tag
+- [ ] Close PR #8 with credit (show the comment text first)
+- [ ] Delete salvaged branches `thread-safe`, `no-MACOSX_DEPLOYMENT_TARGET`, `test-no-MACOSX_DEPLOYMENT_TARGET` (needs user OK)
+- [ ] After 2.0: offer to lock down npm "Publishing access" (require 2FA, disallow tokens)
+- [ ] After 2.0: async (Promise) API (user said yes, as a follow-up)
 
 ## Open questions for the user
 
-1. Node floor: `>=22.12` (my recommendation), or keep claiming `>=20` / older since the binary is version-independent?
-2. Windows: install everywhere and throw at call time (recommended), or keep refusing to install?
-3. Coverage: drop Coveralls and C++ gcov (recommended: the codebase is tiny, so keep JS-side tests thorough instead), or keep it?
-4. Add an async (Promise) API? NSS lookups against LDAP/SSSD can block the event loop. Recommended as a follow-up after 2.0.0, not in it.
-5. PR #8: OK to re-implement with Co-authored-by credit and then close it with a thank-you comment?
-6. Is a 1.x maintenance release wanted before 2.0.0 (to ship the BSD fix to `^1` users)? Recommendation: no. Go straight to 2.0.0 and `npm deprecate` nothing.
+1. **pnpm 11+ hard-fails on our `install` script.** `pnpm add userid` exits with `ERR_PNPM_IGNORED_BUILDS` until the user approves the build, even though the script does nothing where a prebuild exists. pnpm also treats a shipped `binding.gyp` as "needs a build". Options:
+   - **A. Prebuilt only (recommended):** no `install` script, and no `binding.gyp`/`src` in the package. Zero friction with npm, pnpm, yarn and Bun on every prebuilt platform. Other platforms get a clear runtime error; they can build from a git checkout, or ask for a prebuild. Could add cheap QEMU prebuilds for linux ppc64le and s390x to shrink that gap.
+   - **B. Keep the source-build fallback:** pnpm users must approve the build once (`pnpm approve-builds`, or `allowBuilds` in `pnpm-workspace.yaml`); document it in the README.
+
+Answered on 2026-11-09 (kept for the record): Node `>=22.12`; install on Windows and throw; drop Coveralls/gcov; async API after 2.0; re-implement #8 with credit; ship 1.3.0 first.
 
 ## Things not to do
 
@@ -123,3 +124,4 @@
 - Don't "fix" `Int32Value` → `Uint32Value` as a bug fix. It already works (see Findings).
 - Don't trust `resize(foundGroups)` after `getgrouplist` (macOS/BSD return 0).
 - Don't touch `nook-2021-wip`.
+- Don't use Node 24+ Docker images for armv7: Node 24 dropped official 32-bit ARM builds (`no matching manifest for linux/arm/v7`).

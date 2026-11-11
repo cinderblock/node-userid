@@ -1,6 +1,7 @@
 # userid
 
-Simple Node.js library with native bindings for getting uid and gid information.
+Look up user and group ids and names in Node.js, straight from the system's user database.
+Native bindings to the POSIX functions (`getpwnam_r`, `getgrgid_r`, `getgrouplist`, ...), not child processes, so it sees the same users as `id` and `getent`, including NSS sources like LDAP and SSSD.
 
 [![CI](https://github.com/cinderblock/node-userid/actions/workflows/ci.yml/badge.svg)](https://github.com/cinderblock/node-userid/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/userid)](https://www.npmjs.com/package/userid)
@@ -8,73 +9,85 @@ Simple Node.js library with native bindings for getting uid and gid information.
 ## Installation
 
 ```bash
-$ npm install userid
-# Or, alternatively, directly from github:
-$ npm install cinderblock/node-userid
+npm install userid
+# or
+bun add userid
+pnpm add userid
 ```
 
-This uses the POSIX user and group database functions (`getpwnam`, `getgrgid`, `getgrouplist`, ...), so it sees the same users as `id` and `getent`, including NSS sources like LDAP.
-Tested on Linux (glibc, x64 and arm64), macOS, and FreeBSD with Node.js 22, 24, and 26.
-It builds from source on install, so it needs a C++ toolchain and Python (see [node-gyp](https://github.com/nodejs/node-gyp#installation)).
-This package is not useful on Windows.
+Prebuilt binaries ship inside the package, so installing needs no compiler on:
 
-## Usage
+| Platform                                                  | Architectures     |
+| --------------------------------------------------------- | ----------------- |
+| Linux (glibc 2.31+: Debian 11, Ubuntu 20.04, RHEL 9, ...) | x64, arm64, armv7 |
+| Linux (musl: Alpine)                                      | x64, arm64        |
+| macOS 11+                                                 | arm64, x64        |
+| FreeBSD                                                   | x64               |
 
-### Example
+Anywhere else, it builds from source on install, which needs a C++ toolchain and Python (see [node-gyp](https://github.com/nodejs/node-gyp#installation)).
+With Bun, that fallback only runs if you add `userid` to [`trustedDependencies`](https://bun.sh/docs/install/lifecycle).
 
-```js
-var userid = require('userid');
-
-// get user id
-console.log("root's uid is:", userid.uid('root'));
-
-// get group id
-console.log("wheel's gid is:", userid.gid('wheel'));
-
-// get user name
-console.log('uid 0 name is:', userid.username(0));
-
-// get group name
-console.log('gid 0 name is:', userid.groupname(0));
-```
-
-<!-- TODO: Full Docs -->
-
-## Development
-
-This repository is setup for development with Visual Studio Code.
-Other environments should be possible, just replicate the important settings in [`.vscode`](.vscode).
-To get IntelliSense to work fully, add a line like this to your user `settings.json`:
-
-```json
-{
-  "local.node-gyp.node-cache": "C:/Users/<username>/AppData/Local/node-gyp/Cache/<version>"
-}
-```
-
-We use Npm, not Yarn.
-Yarn should work, but we want to use Npm's `package-lock.json`.
+Requires Node.js 22.12 or newer. The binary uses [Node-API](https://nodejs.org/api/n-api.html), so it keeps working on new Node.js versions without a rebuild. It also loads in Bun.
 
 ### Windows
 
-Development on Windows is possible but there are two main hurdles.
+Windows has no POSIX user database. The package installs anyway (so cross-platform projects can depend on it), `isSupported` is `false`, and every lookup throws an error with `code: 'ERR_USERID_UNSUPPORTED_PLATFORM'`.
 
-The initial problem is that we've marked this package as not compatible with Windows.
-Simply remove that line from the `package.json` before running `npm install`.
-Please do not commit this change.
+## Usage
 
-The other problem is that we cannot actually link the binary on a Windows machine because the bindings to the operating system calls are missing.
-However, mock declarations for development on Windows machines are provided and will allow the `.cc` files to compile.
+```js
+import { ids, uid, gid, gids, username, groupname, isSupported } from 'userid';
+// or: const userid = require('userid');
 
-Pull requests that would bring Windows into the fold would be welcome.
+ids('root'); // { uid: 0, gid: 0 }
+uid('root'); // 0
+gid('wheel'); // 0 on macOS and BSDs (on most Linux distributions, group 0 is 'root')
+gids('root'); // e.g. [0, 1, 2]: every group the user is in, primary group included
+username(0); // 'root'
+groupname(0); // 'root' on Linux, 'wheel' on macOS and BSDs
+```
 
-### Improvements to be made
+| Function         | Returns                                   | Not found             |
+| ---------------- | ----------------------------------------- | --------------------- |
+| `ids(username)`  | `{ uid, gid }` (gid is the primary group) | `username not found`  |
+| `uid(username)`  | uid                                       | `username not found`  |
+| `gid(groupname)` | gid                                       | `groupname not found` |
+| `gids(username)` | array of gids, no duplicates              | `username not found`  |
+| `username(uid)`  | user name                                 | `uid not found`       |
+| `groupname(gid)` | group name                                | `gid not found`       |
+| `isSupported`    | `false` on Windows, else `true`           |                       |
 
-- Publish pre-built versions of packages
-- Implement any `TODO`s found in the sources or tests
-- Windows compatibility?
-  - WSL
-  - Windows equivalent native methods
+Errors:
+
+- Not found: `Error` with `code: 'ERR_USERID_NOT_FOUND'`.
+- Wrong argument type or count: `TypeError`. A name containing a null byte is a `TypeError` too.
+- An id that isn't an integer from 0 to 4294967295: `RangeError`.
+- The system lookup itself failed (an unreachable LDAP server, say): an `Error` shaped like Node's own, e.g. `code: 'EIO'`, `syscall: 'getpwnam_r'`.
+
+Lookups are synchronous, and safe to call from several [worker threads](https://nodejs.org/api/worker_threads.html) at once.
+A lookup against a network directory can block, so keep that in mind on a busy event loop.
+
+## Development
+
+```bash
+bun install          # installs, builds the native addon (not on Windows) and compiles the TypeScript
+bun run test         # node:test, against `id`
+bun run check        # formatting, spelling, types, clang-tidy
+bun run check:package  # publint + are-the-types-wrong
+```
+
+Tests run on Node.js directly, which strips the TypeScript types itself.
+On Windows, `bun install` skips the native build and the tests check the unsupported-platform behavior; use WSL for the rest.
+
+Optional test fixtures, which CI creates on Linux and FreeBSD:
+
+| Variable                                        | Meaning                                                        |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| `LONG_USERNAME_TEST`, `LONG_GROUPNAME_TEST`     | names over 15 characters                                       |
+| `BIG_ID_USERNAME`, `BIG_ID_GROUPNAME`, `BIG_ID` | a user and group with an id above 2³¹ (default `3000000000`)   |
+| `USERID_PACKAGE_DIR`                            | test an installed copy of the package instead of this checkout |
+
+`scripts/smoke-test-package.sh <tarball> <npm|pnpm|bun>` installs a packed tarball into a scratch project and runs the tests against it, failing if it had to compile.
 
 ## History
 
@@ -87,20 +100,23 @@ Since Jen has not responded to any attempts at contact, I requested that Npm tra
 Version 1.0.0 switched to N-API, the forward compatible interface that should be, all around, much nicer moving forward.
 It also signals the change to using Github Actions to run all our full coverage tests on all supported platforms.
 
+Version 2.0.0 ships prebuilt binaries, TypeScript types, ES module and CommonJS entry points, and installs on Windows. See the [changelog](CHANGELOG.md).
+The prebuild matrix started from [@matthewh](https://github.com/matthewh)'s [#8](https://github.com/cinderblock/node-userid/pull/8).
+
 ## Releasing
 
 Releases are published by [CI](.github/workflows/release.yml), never from a developer machine.
 Bump the version in `package.json`, commit, then push a matching tag (`git tag v1.2.3 && git push origin v1.2.3`).
-The workflow runs the full test suite and then publishes with [provenance](https://docs.npmjs.com/generating-provenance-statements) through npm trusted publishing.
+The workflow runs all of CI, builds the prebuilt binaries, tests the packed tarball, and then publishes that exact tarball with [provenance](https://docs.npmjs.com/generating-provenance-statements) through npm trusted publishing.
 
 ## License
 
-The license, when the package was created, had some mix of GLPv3 and Public Domain.
+The license, when the package was created, had some mix of GPLv3 and Public Domain.
 
 Since the main source code has always been Public Domain, I believe it should stay that way.
 I've also explicitly extended it to the rest of the main (published) source code.
 
-Event though Jen's [before last commit](https://github.com/jandre/node-userid/commit/ba665c45d958982ff5aa0d482741a2955a4de8c4) changed the license in one location to MIT,
+Even though Jen's [before last commit](https://github.com/jandre/node-userid/commit/ba665c45d958982ff5aa0d482741a2955a4de8c4) changed the license in one location to MIT,
 the tests, build files, and other scripts (especially those by other contributors) were added under the GPLv3.
 I'm therefore inclined to think it's better to not hold to that final license change.
 
