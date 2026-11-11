@@ -37,6 +37,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./promises": {
+      "import": {
+        "types": "./dist/promises.d.mts",
+        "default": "./dist/promises.mjs"
+      },
+      "require": {
+        "types": "./dist/promises.d.cts",
+        "default": "./dist/promises.cjs"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [

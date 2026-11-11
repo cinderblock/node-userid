@@ -36,8 +36,11 @@ fi
 echo "::group::Resolve through the exports map"
 node -e "const u = require('userid'); console.log('require:', u.isSupported, typeof u.ids)"
 node --input-type=module -e "import { isSupported, ids } from 'userid'; console.log('import:', isSupported, typeof ids)"
+node -e "const p = require('userid/promises'); if (p !== require('userid').promises) throw new Error('two copies'); console.log('require promises:', typeof p.ids)"
+node --input-type=module -e "import { ids } from 'userid/promises'; console.log('import promises:', typeof ids)"
 if [ "$pm" = bun ]; then
   bun -e "const u = require('userid'); console.log('bun runtime:', u.isSupported, u.isSupported ? u.username(process.getuid()) : '')"
+  bun -e "const p = require('userid/promises'); console.log('bun runtime promises:', p.isSupported, p.isSupported ? await p.username(process.getuid()) : await p.ids('root').catch(e => e.code))"
 fi
 echo "::endgroup::"
 
