@@ -121,7 +121,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # glibc 2.31 (Debian 11, Ubuntu 20.04), so the binaries load on older distributions too.
+          # Built on old distributions (glibc 2.31); scripts/check-prebuilds.sh then checks they need no more than Node.js 22 does.
           # ppc64le and s390x have no node:22-bullseye image: Ubuntu 20.04 (also glibc 2.31) plus the official Node.js tarball.
           - { name: linux-x64-glibc, runner: ubuntu-latest, image: 'node:22-bullseye' }
           - { name: linux-arm64-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye' }
@@ -238,6 +238,9 @@ jobs:
           pattern: prebuild-*
           path: prebuilds
           merge-multiple: true
+
+      - name: Check the Linux prebuilds' glibc and libstdc++ requirements
+        run: scripts/check-prebuilds.sh prebuilds
 
       - name: Pack
         run: |

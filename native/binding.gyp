@@ -12,15 +12,9 @@
                 "CLANG_CXX_LANGUAGE_STANDARD": "c++17",
                 "MACOSX_DEPLOYMENT_TARGET": "11.0",
             },
-            "conditions": [
-                [
-                    'OS=="linux"',
-                    {
-                        # Prebuilt binaries shouldn't need a newer libstdc++ than the system they land on
-                        "ldflags": ["-static-libstdc++", "-static-libgcc"],
-                    },
-                ],
-            ],
+            # libstdc++ stays dynamically linked: Node.js itself already needs a newer one than we do.
+            # Linking it statically made the binaries 5x bigger and pulled in newer glibc symbols.
+            # scripts/check-prebuilds.sh enforces the symbol versions the Linux binaries may need.
         },
     ],
 }

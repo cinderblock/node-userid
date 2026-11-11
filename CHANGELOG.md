@@ -4,7 +4,7 @@
 
 ### Added
 
-- **Prebuilt binaries** inside the package for Linux (x64, arm64, armv7, ppc64le, s390x on glibc 2.31+; x64, arm64 on musl), macOS (arm64, x64), and FreeBSD (x64). The package has no install script, so nothing compiles on install, and pnpm and Bun need no build approval. Thanks to [@matthewh](https://github.com/matthewh), whose [#8](https://github.com/cinderblock/node-userid/pull/8) started the build matrix.
+- **Prebuilt binaries** inside the package for Linux (x64, arm64, armv7, ppc64le, s390x on glibc 2.28+; x64, arm64 on musl), macOS (arm64, x64), and FreeBSD (x64). The package has no install script, so nothing compiles on install, and pnpm and Bun need no build approval. Thanks to [@matthewh](https://github.com/matthewh), whose [#8](https://github.com/cinderblock/node-userid/pull/8) started the build matrix.
 - **ES module entry point** (`import { ids } from 'userid'`) alongside CommonJS, and TypeScript types for both.
 - **`isSupported`**: `false` on Windows.
 - Errors carry a `code`: `ERR_USERID_NOT_FOUND` when a user or group doesn't exist, and Node-style codes (`EIO`, ...) with `errno` and `syscall` when the system lookup itself fails.

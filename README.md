@@ -17,12 +17,12 @@ pnpm add userid
 
 Prebuilt binaries ship inside the package. There is no install script: nothing compiles, and pnpm and Bun need no build approval.
 
-| Platform                                                  | Architectures                     |
-| --------------------------------------------------------- | --------------------------------- |
-| Linux (glibc 2.31+: Debian 11, Ubuntu 20.04, RHEL 9, ...) | x64, arm64, armv7, ppc64le, s390x |
-| Linux (musl: Alpine)                                      | x64, arm64                        |
-| macOS 11+                                                 | arm64, x64                        |
-| FreeBSD                                                   | x64                               |
+| Platform                                                                   | Architectures                     |
+| -------------------------------------------------------------------------- | --------------------------------- |
+| Linux (glibc 2.28+, like Node.js 22: RHEL 8, Debian 10, Ubuntu 20.04, ...) | x64, arm64, armv7, ppc64le, s390x |
+| Linux (musl: Alpine)                                                       | x64, arm64                        |
+| macOS 11+                                                                  | arm64, x64                        |
+| FreeBSD                                                                    | x64                               |
 
 On any other platform, importing `userid` throws an error with `code: 'ERR_USERID_NO_PREBUILT_BINARY'`.
 [Open an issue](https://github.com/cinderblock/node-userid/issues) to ask for a prebuilt binary, or [build from source](#building-from-source).

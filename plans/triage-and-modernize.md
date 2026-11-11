@@ -41,6 +41,7 @@
   - prebuildify builds against the **newest** Node headers by default (26.0.0, `-std=gnu++20`), which gcc 9 on Ubuntu 20.04 rejects. Pinned with `--target node@22.12.0`. It keeps the headers in `$TMPDIR/prebuildify/node/<version>`, not node-gyp's cache (`scripts/clang-tidy.mjs` searches both).
   - CI's clang-tidy is newer than local 18 and adds checks (`misc-const-correctness` misfires on the `*_r` out-param, so it's disabled).
   - `macos-15-intel` runners exist; they run the darwin-x64 binary cross-compiled on arm64 fine.
+  - **Static libstdc++ was a mistake.** On linux-x64 a static build was 316 kB and needed glibc symbols up to the build machine's newest (2.38 locally); a dynamic build is 60 kB and needs only `GLIBC_2.14` + `GLIBCXX_3.4.21`. Node.js itself needs a newer libstdc++, so dynamic is safe. The tarball went from 824 kB to an estimated ~150 kB. `scripts/check-prebuilds.sh` (readelf, any arch) now fails CI if a glibc prebuild needs more than glibc 2.28 / GLIBCXX 3.4.25 (Node.js 22's own floor).
   - WSL wipes `/tmp` when its VM idles out between calls; build and lint in the same `wsl.exe` call.
 
 ## Triage
