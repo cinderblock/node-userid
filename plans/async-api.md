@@ -85,7 +85,7 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 - [x] Implementation, tests, CI step, smoke test (2026-11-10).
 - [ ] User review of the design.
 - [ ] README, CHANGELOG 2.1.0, version bump.
-- [ ] CI green on the PR.
+- [x] CI green on [PR #11](https://github.com/cinderblock/node-userid/pull/11): all 42 checks on `1764c49` (2026-11-10). Re-run after the docs commit.
 
 ## Open questions for the user
 
