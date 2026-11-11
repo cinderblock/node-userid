@@ -2,39 +2,22 @@
     "targets": [
         {
             "target_name": "userid",
-            "sources": ["<!@(ls -1 src/*.cc)"],
-            "include_dirs": ["<!@(node -p \"require('node-addon-api').include\")"],
-            "cflags!": ["-fno-exceptions"],
-            "cflags_cc!": ["-fno-exceptions"],
+            "sources": ["src/userid.cc"],
+            # Enables C++ exceptions everywhere (cflags, Xcode, MSVC) the way node-addon-api expects
+            "dependencies": ["<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except"],
+            # The oldest Node-API version that has everything we use. One binary then loads on every Node.js version.
+            "defines": ["NAPI_VERSION=8"],
+            "cflags_cc": ["-std=c++17"],
             "xcode_settings": {
-                "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
-                "CLANG_CXX_LIBRARY": "libc++",
-                "MACOSX_DEPLOYMENT_TARGET": "10.7",
-            },
-            "msvs_settings": {
-                "VCCLCompilerTool": {"ExceptionHandling": 1},
-            },
-            "variables": {
-                "generate_coverage": "<!(echo $GENERATE_COVERAGE)",
+                "CLANG_CXX_LANGUAGE_STANDARD": "c++17",
+                "MACOSX_DEPLOYMENT_TARGET": "11.0",
             },
             "conditions": [
                 [
-                    'OS=="mac"',
+                    'OS=="linux"',
                     {
-                        "cflags+": ["-fvisibility=hidden"],
-                        "xcode_settings": {
-                            "GCC_SYMBOLS_PRIVATE_EXTERN": "YES",  # -fvisibility=hidden
-                        },
-                    },
-                ],
-                [
-                    'generate_coverage=="yes"',
-                    {
-                        "cflags+": ["--coverage"],
-                        "cflags_cc+": ["--coverage"],
-                        "link_settings": {
-                            "libraries+": ["-lgcov"],
-                        },
+                        # Prebuilt binaries shouldn't need a newer libstdc++ than the system they land on
+                        "ldflags": ["-static-libstdc++", "-static-libgcc"],
                     },
                 ],
             ],
