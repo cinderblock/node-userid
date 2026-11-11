@@ -41,7 +41,7 @@
   - prebuildify builds against the **newest** Node headers by default (26.0.0, `-std=gnu++20`), which gcc 9 on Ubuntu 20.04 rejects. Pinned with `--target node@22.12.0`. It keeps the headers in `$TMPDIR/prebuildify/node/<version>`, not node-gyp's cache (`scripts/clang-tidy.mjs` searches both).
   - CI's clang-tidy is newer than local 18 and adds checks (`misc-const-correctness` misfires on the `*_r` out-param, so it's disabled).
   - `macos-15-intel` runners exist; they run the darwin-x64 binary cross-compiled on arm64 fine.
-  - **Static libstdc++ was a mistake.** On linux-x64 a static build was 316 kB and needed glibc symbols up to the build machine's newest (2.38 locally); a dynamic build is 60 kB and needs only `GLIBC_2.14` + `GLIBCXX_3.4.21`. Node.js itself needs a newer libstdc++, so dynamic is safe. The tarball went from 824 kB to an estimated ~150 kB. `scripts/check-prebuilds.sh` (readelf, any arch) now fails CI if a glibc prebuild needs more than glibc 2.28 / GLIBCXX 3.4.25 (Node.js 22's own floor).
+  - **Static libstdc++ was a mistake.** On linux-x64 a static build was 316 kB and needed glibc symbols up to the build machine's newest (2.38 locally); a dynamic build is 60 kB and needs only `GLIBC_2.14` + `GLIBCXX_3.4.21`. Node.js itself needs a newer libstdc++, so dynamic is safe. The tarball went from 824 kB to **190.7 kB packed, 557 kB unpacked** (CI run 42937801476). Every glibc prebuild needs at most `GLIBC_2.17` + `GLIBCXX_3.4.21`. `scripts/check-prebuilds.sh` (readelf, any arch) now fails CI if a glibc prebuild needs more than glibc 2.28 / GLIBCXX 3.4.25 (Node.js 22's own floor).
   - WSL wipes `/tmp` when its VM idles out between calls; build and lint in the same `wsl.exe` call.
 
 ## Triage
@@ -112,7 +112,7 @@
   - [x] README + CHANGELOG for 2.0
   - [x] **pnpm: prebuilt only** (user chose it on 2026-11-10). No install script; `binding.gyp` + sources moved to `native/` and not shipped; `ERR_USERID_NO_PREBUILT_BINARY` on platforms without a prebuild; ppc64le + s390x prebuilds added.
   - [x] armv7, ppc64le and s390x consumer tests
-  - [x] **CI fully green: 42/42 jobs** ([run 42935436981](https://github.com/cinderblock/node-userid/actions/runs/42935436981)). The tarball is 824 kB packed and 2.3 MB unpacked, with 10 binaries; most of that is libstdc++ statically linked into the Linux builds.
+  - [x] **CI fully green: 42/42 jobs** ([run 42937801476](https://github.com/cinderblock/node-userid/actions/runs/42937801476)), with dynamic libstdc++: a 190.7 kB tarball holding 10 binaries.
   - [x] Version 2.0.0 in package.json and CHANGELOG
   - [ ] PR `modernize` → `master` (opened; merge needs the user's OK)
   - [ ] After merge: the user OKs the `v2.0.0` tag, which publishes
