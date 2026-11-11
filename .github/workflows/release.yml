@@ -2,7 +2,7 @@ name: Release
 
 # Publishes to npm when a version tag (`v1.2.3`) is pushed.
 # Authentication uses npm trusted publishing (OIDC): no npm token is stored anywhere.
-# The package must have this repository + `release.yml` configured as a trusted publisher on npmjs.com.
+# The package must have this repository + `release.yml` + environment `npm` configured as a trusted publisher on npmjs.com.
 
 on:
   push:
@@ -38,11 +38,17 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - name: Check that the tag matches package.json
+      # Publish exactly the tarball that CI built and tested, prebuilt binaries included
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
+      - name: Check that the tag matches the package
         run: |
           version="$(node -p "require('./package.json').version")"
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version"
+          if [ "v$version" != "$GITHUB_REF_NAME" ] || [ ! -f "userid-$version.tgz" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $version (or userid-$version.tgz is missing)"
+            ls -l userid-*.tgz
             exit 1
           fi
           echo "VERSION=$version" >> "$GITHUB_ENV"
@@ -62,8 +68,5 @@ jobs:
           echo "Publishing $VERSION as '$tag' (current latest: $current)"
           echo "DIST_TAG=$tag" >> "$GITHUB_ENV"
 
-      - name: Install dependencies without building
-        run: npm ci --ignore-scripts
-
       - name: Publish
-        run: npm publish --provenance --access public --tag "$DIST_TAG"
+        run: npm publish "userid-$VERSION.tgz" --provenance --access public --tag "$DIST_TAG"

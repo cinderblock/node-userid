@@ -12,12 +12,32 @@ permissions:
 
 env:
   FORCE_COLOR: 1
-  # Test fixtures created on Linux and FreeBSD runners
+  # Test fixtures, created on Linux and FreeBSD
   LONG_USERNAME_TEST: UsernameWithMoreThan15Chars
   LONG_GROUPNAME_TEST: GroupnameWithMoreThan15Chars
   BIG_ID: 3000000000
 
 jobs:
+  checks:
+    name: Format, spelling, types, lint, package shape
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - run: sudo apt-get install -y clang-tidy
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - run: bun run spelling
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run check:package
+
+  # Builds from source and runs the tests on every supported Node.js version
   test:
     name: Node ${{ matrix.node }} on ${{ matrix.os }}
 
@@ -31,15 +51,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install dependencies and build
-        run: npm ci
+      - name: Install and build
+        run: bun install --frozen-lockfile
 
-      - name: Create test users and groups (Linux)
+      - name: Create test users and groups
         if: runner.os == 'Linux'
         run: |
           sudo useradd "$LONG_USERNAME_TEST"
@@ -49,70 +69,36 @@ jobs:
           echo "BIG_ID_USERNAME=biguidusername" >> "$GITHUB_ENV"
           echo "BIG_ID_GROUPNAME=biggroupname" >> "$GITHUB_ENV"
 
-      - name: Clear long-name fixtures (macOS has none)
+      - name: No test users on macOS
         if: runner.os == 'macOS'
         run: |
           echo "LONG_USERNAME_TEST=" >> "$GITHUB_ENV"
           echo "LONG_GROUPNAME_TEST=" >> "$GITHUB_ENV"
 
-      - name: Test JavaScript API
-        run: npm test
+      - run: bun run test
 
-      # We fully support requiring the native `.node` file directly.
-      # For historical reasons its `uid` export matches `ids`, so it gets slightly different tests.
-      - name: Test native API
-        run: npm test
-        env:
-          MOCHA_IMPORT_OVERRIDE: ../build/Release/userid.node
-          MOCHA_USE_NODE_API: true
-
-  packed:
-    name: Install packed tarball (${{ matrix.os }})
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
-    runs-on: ${{ matrix.os }}
+  windows:
+    name: Windows (installs, every lookup throws)
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
 
-      - name: Install dev dependencies without building
-        run: npm ci --ignore-scripts
-
-      - name: Pack
-        run: npm pack --ignore-scripts
-
-      - name: Install the tarball into a scratch project (builds from source)
-        run: |
-          mkdir -p "$RUNNER_TEMP/consumer"
-          cd "$RUNNER_TEMP/consumer"
-          echo '{}' > package.json
-          npm install "$GITHUB_WORKSPACE"/userid-*.tgz
-
-      - name: Clear long-name fixtures
-        run: |
-          echo "LONG_USERNAME_TEST=" >> "$GITHUB_ENV"
-          echo "LONG_GROUPNAME_TEST=" >> "$GITHUB_ENV"
-
-      - name: Run tests against the installed package
-        run: npm test
-        env:
-          MOCHA_IMPORT_OVERRIDE: ${{ runner.temp }}/consumer/node_modules/userid
+      - run: bun install --frozen-lockfile
+      - run: bun run test
 
   freebsd:
-    name: FreeBSD
+    name: FreeBSD (builds from source)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Bun doesn't run on FreeBSD, so this job uses npm
       - name: Build and test in a FreeBSD VM
         uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
         with:
@@ -123,28 +109,204 @@ jobs:
             pw useradd "$LONG_USERNAME_TEST"
             pw useradd "$LONG_GROUPNAME_TEST"
           run: |
-            npm ci
+            npm install --no-audit --no-fund
             npm test
 
-  checks:
-    # clang-tidy is not run on v1: the runner's clang rejects node-addon-api 4.3's headers.
-    # 2.0 updates node-addon-api and brings linting back.
-    name: Formatting and spelling
+  prebuild-linux:
+    name: Prebuild ${{ matrix.name }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Debian 11 (glibc 2.31), so the binaries load on older distributions too
+          - { name: linux-x64-glibc, runner: ubuntu-latest, image: 'node:22-bullseye' }
+          - { name: linux-arm64-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye' }
+          - { name: linux-armv7-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye', platform: linux/arm/v7 }
+          - { name: linux-x64-musl, runner: ubuntu-latest, image: 'node:22-alpine', apk: true }
+          - { name: linux-arm64-musl, runner: ubuntu-24.04-arm, image: 'node:22-alpine', apk: true }
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      # The build tools are plain JavaScript, so install them here and use them inside the container
+      - run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Emulate ${{ matrix.platform }}
+        if: matrix.platform
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+      - name: Build in ${{ matrix.image }}
+        env:
+          IMAGE: ${{ matrix.image }}
+          PLATFORM: ${{ matrix.platform }}
+          APK: ${{ matrix.apk }}
+        run: |
+          docker run --rm ${PLATFORM:+--platform "$PLATFORM"} -v "$PWD:/repo" -w /repo "$IMAGE" sh -ec '
+            if [ "$0" = true ]; then apk add --no-cache python3 make g++; fi
+            node node_modules/prebuildify/bin.js --napi --strip --tag-libc --tag-armv
+          ' "$APK"
+          find prebuilds -type f -exec ls -l {} +
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: prebuild-${{ matrix.name }}
+          path: prebuilds/
+          if-no-files-found: error
+
+  prebuild-macos:
+    name: Prebuild darwin-arm64 + darwin-x64
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: bun run prebuildify --arch arm64
+      - name: Cross-compile x64
+        run: bun run prebuildify --arch x64
+      - run: find prebuilds -type f -exec file {} +
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: prebuild-darwin
+          path: prebuilds/
+          if-no-files-found: error
+
+  prebuild-freebsd:
+    name: Prebuild freebsd-x64
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - run: bun install --frozen-lockfile --ignore-scripts
 
+      - name: Build in a FreeBSD VM
+        uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
+        with:
+          usesh: true
+          prepare: pkg install -y node22 python3 gmake
+          run: node node_modules/prebuildify/bin.js --napi --strip
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: prebuild-freebsd-x64
+          path: prebuilds/
+          if-no-files-found: error
+
+  pack:
+    name: Pack with every prebuild
+    needs: [prebuild-linux, prebuild-macos, prebuild-freebsd]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
 
-      - name: Install dependencies without building
-        run: npm ci --ignore-scripts
+      - run: bun install --frozen-lockfile --ignore-scripts
 
-      - name: Formatting
-        # Any line endings are fine locally, but only LF is committed
-        run: npm run prettier -- --end-of-line lf
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: prebuild-*
+          path: prebuilds
+          merge-multiple: true
 
-      - name: Spelling
-        run: npm run spelling
+      - name: Pack
+        run: |
+          find prebuilds -type f | sort
+          npm pack
+          tar -tzf userid-*.tgz | sort
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: package
+          path: userid-*.tgz
+          if-no-files-found: error
+
+  # Install the packed tarball like a user would, with no compiler involved
+  consumer:
+    name: Install with ${{ matrix.pm }} on ${{ matrix.os }}
+    needs: pack
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-15-intel, windows-latest]
+        pm: [npm, pnpm, bun]
+
+    runs-on: ${{ matrix.os }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 12
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
+      - name: No test users here
+        run: |
+          echo "LONG_USERNAME_TEST=" >> "$GITHUB_ENV"
+          echo "LONG_GROUPNAME_TEST=" >> "$GITHUB_ENV"
+
+      - run: scripts/smoke-test-package.sh userid-*.tgz ${{ matrix.pm }}
+
+  consumer-musl:
+    name: Install with npm on Alpine (${{ matrix.runner }})
+    needs: pack
+
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+
+      - name: Install and test in node:24-alpine (no compiler in the image)
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:24-alpine \
+            sh -ec 'apk add --no-cache bash >/dev/null && scripts/smoke-test-package.sh userid-*.tgz npm'
+
+  consumer-armv7:
+    name: Install with npm on linux-armv7 (emulated)
+    needs: pack
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: package
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+
+      - name: Install and test in node:24-bookworm-slim on arm/v7 (no compiler in the image)
+        run: |
+          docker run --rm --platform linux/arm/v7 -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:24-bookworm-slim \
+            bash -ec 'scripts/smoke-test-package.sh userid-*.tgz npm'
