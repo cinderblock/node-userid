@@ -29,8 +29,11 @@ jobs:
         with:
           node-version: 24
 
-      - run: sudo apt-get install -y clang-tidy
+      - run: sudo apt-get -o Acquire::Retries=5 install -y clang-tidy
       - run: bun install --frozen-lockfile
+      # node-gyp would download these mid-build with no retry; see the script
+      - name: Download the Node.js headers
+        run: scripts/fetch-node-headers.sh
       - run: bun run build:native
       - run: bun run format:check
       - run: bun run spelling
@@ -58,6 +61,9 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - run: bun install --frozen-lockfile
+      # node-gyp would download these mid-build with no retry; see the script
+      - name: Download the Node.js headers
+        run: scripts/fetch-node-headers.sh
       - run: bun run build:native
 
       - name: Create test users and groups
@@ -98,12 +104,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # node-gyp would download these mid-build with no retry; see the script
+      - name: Download the Node.js headers
+        run: scripts/fetch-node-headers.sh
 
-      # Bun doesn't run on FreeBSD, so this job uses npm
+      # Bun doesn't run on FreeBSD, so this job uses npm. The VM sees the workspace at the same path.
       - name: Build and test in a FreeBSD VM
         uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
         with:
-          envs: FORCE_COLOR LONG_USERNAME_TEST LONG_GROUPNAME_TEST
+          envs: FORCE_COLOR LONG_USERNAME_TEST LONG_GROUPNAME_TEST npm_package_config_node_gyp_tarball
           usesh: true
           prepare: |
             pkg install -y node24 npm-node24 python3 gmake
@@ -153,6 +162,9 @@ jobs:
 
       # The build tools are plain JavaScript, so install them here and use them inside the container
       - run: bun install --frozen-lockfile --ignore-scripts
+      # node-gyp would download these mid-build with no retry; see the script
+      - name: Download the Node.js headers
+        run: scripts/fetch-node-headers.sh
 
       - name: Emulate ${{ matrix.platform }}
         if: matrix.platform
@@ -164,8 +176,9 @@ jobs:
           PLATFORM: ${{ matrix.platform }}
           SETUP: ${{ matrix.setup }}
         run: |
-          docker run --rm ${PLATFORM:+--platform "$PLATFORM"} -v "$PWD:/repo" -w /repo "$IMAGE" \
-            sh -ec "${SETUP:+$SETUP && }npm run build:native"
+          docker run --rm ${PLATFORM:+--platform "$PLATFORM"} -v "$PWD:/repo" -w /repo \
+            -e npm_package_config_node_gyp_tarball="/repo/${npm_package_config_node_gyp_tarball#"$PWD"/}" \
+            "$IMAGE" sh -ec "${SETUP:+$SETUP && }npm run build:native"
           find prebuilds -type f -exec ls -l {} +
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -186,6 +199,9 @@ jobs:
           node-version: 22
 
       - run: bun install --frozen-lockfile --ignore-scripts
+      # node-gyp would download these mid-build with no retry; see the script
+      - name: Download the Node.js headers
+        run: scripts/fetch-node-headers.sh
       - run: bun run build:native --arch arm64
       - name: Cross-compile x64
         run: bun run build:native --arch x64
@@ -205,10 +221,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - run: bun install --frozen-lockfile --ignore-scripts
+      # node-gyp would download these mid-build with no retry; see the script
+      - name: Download the Node.js headers
+        run: scripts/fetch-node-headers.sh
 
+      # The VM sees the workspace at the same path
       - name: Build in a FreeBSD VM
         uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
         with:
+          envs: npm_package_config_node_gyp_tarball
           usesh: true
           prepare: pkg install -y node22 npm-node22 python3 gmake
           run: npm run build:native

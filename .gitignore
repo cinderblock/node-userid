@@ -5,3 +5,4 @@ prebuilds/
 node_modules/
 *.tgz
 *.swp
+.cache/
