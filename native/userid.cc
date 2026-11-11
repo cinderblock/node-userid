@@ -185,7 +185,7 @@ auto Gids(const CallbackInfo &info) -> Napi::Value {
   const auto name = stringArg(info);
   const auto user = findUser(env, name);
 
-#if defined(__APPLE__)
+#ifdef __APPLE__
   // macOS declares the group list as `int`
   using ListId = int;
 #else

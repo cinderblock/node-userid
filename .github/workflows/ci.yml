@@ -121,19 +121,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Debian 11 (glibc 2.31), so the binaries load on older distributions too.
-          # ppc64le and s390x have no node:22-bullseye image, so they get Node.js from its official tarball.
+          # glibc 2.31 (Debian 11, Ubuntu 20.04), so the binaries load on older distributions too.
+          # ppc64le and s390x have no node:22-bullseye image: Ubuntu 20.04 (also glibc 2.31) plus the official Node.js tarball.
           - { name: linux-x64-glibc, runner: ubuntu-latest, image: 'node:22-bullseye' }
           - { name: linux-arm64-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye' }
           - { name: linux-armv7-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye', platform: linux/arm/v7 }
           - name: linux-ppc64-glibc
             runner: ubuntu-latest
-            image: debian:bullseye
+            image: ubuntu:20.04
             platform: linux/ppc64le
             setup: sh scripts/ci-install-node.sh python3 make g++
           - name: linux-s390x-glibc
             runner: ubuntu-latest
-            image: debian:bullseye
+            image: ubuntu:20.04
             platform: linux/s390x
             setup: sh scripts/ci-install-node.sh python3 make g++
           - name: linux-x64-musl
@@ -325,7 +325,7 @@ jobs:
           # There is no Node.js image for s390x
           - platform: linux/s390x
             runner: ubuntu-latest
-            image: debian:bookworm-slim
+            image: ubuntu:22.04
             setup: sh scripts/ci-install-node.sh
 
     runs-on: ${{ matrix.runner }}

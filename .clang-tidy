@@ -9,6 +9,7 @@ Checks: >
   cppcoreguidelines-init-variables,
   cppcoreguidelines-narrowing-conversions,
   misc-*,
+  -misc-const-correctness,
   -misc-include-cleaner,
   -misc-use-anonymous-namespace,
   modernize-*,

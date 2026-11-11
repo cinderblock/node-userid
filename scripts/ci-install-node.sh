@@ -1,6 +1,6 @@
 #!/bin/sh
-# CI helper: install the official Node.js 22 build into a plain Debian container, as root.
-# For architectures with no `node:` Docker image (s390x), or none on an old enough Debian (ppc64le).
+# CI helper: install the official Node.js 22 build into a plain Debian or Ubuntu container, as root.
+# For architectures with no `node:` Docker image (s390x) or none old enough (ppc64le).
 
 set -eu
 
