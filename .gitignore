@@ -1,4 +1,5 @@
 build/
+native/build/
 dist/
 prebuilds/
 node_modules/

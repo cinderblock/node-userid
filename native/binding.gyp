@@ -2,7 +2,7 @@
     "targets": [
         {
             "target_name": "userid",
-            "sources": ["src/userid.cc"],
+            "sources": ["userid.cc"],
             # Enables C++ exceptions everywhere (cflags, Xcode, MSVC) the way node-addon-api expects
             "dependencies": ["<!(node -p \"require('node-addon-api').targets\"):node_addon_api_except"],
             # The oldest Node-API version that has everything we use. One binary then loads on every Node.js version.

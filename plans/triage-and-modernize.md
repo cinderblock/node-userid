@@ -101,7 +101,7 @@
   - [x] Native rewrite, TypeScript wrapper, ESM + CJS, Windows behavior, node:test suite, Bun tooling: `26feba8`
   - [x] CI with prebuilds, a pack job, consumer installs, and a release that publishes the tested tarball: `39c7cfa`
   - [x] README + CHANGELOG for 2.0
-  - [ ] **pnpm decision (waiting on user)**, see Open questions 1
+  - [x] **pnpm: prebuilt only** (user chose it on 2026-11-10). No install script; `binding.gyp` + sources moved to `native/` and not shipped; `ERR_USERID_NO_PREBUILT_BINARY` on platforms without a prebuild; ppc64le + s390x prebuilds added.
   - [ ] armv7 consumer test on the Node 22 image (fix pushed; confirm on CI)
   - [ ] Version bump to 2.0.0, then the user OKs the `v2.0.0` tag
 - [ ] Close PR #8 with credit (show the comment text first)
@@ -111,11 +111,9 @@
 
 ## Open questions for the user
 
-1. **pnpm 11+ hard-fails on our `install` script.** `pnpm add userid` exits with `ERR_PNPM_IGNORED_BUILDS` until the user approves the build, even though the script does nothing where a prebuild exists. pnpm also treats a shipped `binding.gyp` as "needs a build". Options:
-   - **A. Prebuilt only (recommended):** no `install` script, and no `binding.gyp`/`src` in the package. Zero friction with npm, pnpm, yarn and Bun on every prebuilt platform. Other platforms get a clear runtime error; they can build from a git checkout, or ask for a prebuild. Could add cheap QEMU prebuilds for linux ppc64le and s390x to shrink that gap.
-   - **B. Keep the source-build fallback:** pnpm users must approve the build once (`pnpm approve-builds`, or `allowBuilds` in `pnpm-workspace.yaml`); document it in the README.
+None right now.
 
-Answered on 2026-11-09 (kept for the record): Node `>=22.12`; install on Windows and throw; drop Coveralls/gcov; async API after 2.0; re-implement #8 with credit; ship 1.3.0 first.
+Answered (kept for the record): 2026-11-10, pnpm: prebuilt only, no install script. 2026-11-09: Node `>=22.12`; install on Windows and throw; drop Coveralls/gcov; async API after 2.0; re-implement #8 with credit; ship 1.3.0 first.
 
 ## Things not to do
 
@@ -124,4 +122,6 @@ Answered on 2026-11-09 (kept for the record): Node `>=22.12`; install on Windows
 - Don't "fix" `Int32Value` → `Uint32Value` as a bug fix. It already works (see Findings).
 - Don't trust `resize(foundGroups)` after `getgrouplist` (macOS/BSD return 0).
 - Don't touch `nook-2021-wip`.
+- Don't put `binding.gyp` back in the repo root. Bun builds any root project with a `binding.gyp` and no install script (ignoring `gypfile: false`), which breaks `bun install` on Windows (`grp.h: No such file or directory`). npm and pnpm treat a shipped `binding.gyp` as "needs a build" too.
+- Don't add an `install`/`postinstall` script: pnpm 11+ fails `pnpm add` with `ERR_PNPM_IGNORED_BUILDS` for any dependency that has one.
 - Don't use Node 24+ Docker images for armv7: Node 24 dropped official 32-bit ARM builds (`no matching manifest for linux/arm/v7`).

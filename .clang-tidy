@@ -20,5 +20,5 @@ Checks: >
   -readability-magic-numbers,
   -readability-function-cognitive-complexity
 WarningsAsErrors: '*'
-HeaderFilterRegex: 'src/.*'
+HeaderFilterRegex: 'native/.*'
 FormatStyle: file

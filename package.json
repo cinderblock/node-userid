@@ -42,22 +42,17 @@
   "files": [
     "dist/",
     "prebuilds/",
-    "src/userid.cc",
-    "binding.gyp",
-    "scripts/install.cjs",
     "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=22.12"
   },
-  "gypfile": true,
+  "gypfile": false,
   "scripts": {
-    "install": "node scripts/install.cjs",
     "prepare": "tsc -p tsconfig.build.json",
-    "build": "node-gyp rebuild && tsc -p tsconfig.build.json",
-    "build:native": "node-gyp rebuild",
+    "build": "prebuildify --cwd native --out . --name userid --napi --strip --tag-libc --tag-armv && tsc -p tsconfig.build.json",
+    "build:native": "prebuildify --cwd native --out . --name userid --napi --strip --tag-libc --tag-armv",
     "build:ts": "tsc -p tsconfig.build.json",
-    "prebuildify": "prebuildify --napi --strip --tag-libc --tag-armv",
     "test": "node --test test/*.test.mts",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "node scripts/clang-tidy.mjs",
@@ -69,13 +64,13 @@
     "prepublishOnly": "node scripts/guard-publish.cjs"
   },
   "dependencies": {
-    "node-addon-api": "^8.9.2",
     "node-gyp-build": "^4.8.4"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
     "@types/node": "^22.20.5",
     "cspell": "^10.4.1",
+    "node-addon-api": "^8.9.2",
     "node-gyp": "^13.1.0",
     "prebuildify": "^6.0.1",
     "prettier": "^3.9.10",

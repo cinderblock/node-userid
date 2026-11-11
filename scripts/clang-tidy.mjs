@@ -1,5 +1,5 @@
 // Run clang-tidy on the native sources with the include paths node-gyp builds with.
-// Needs a configured build (`bun run build:native`) for the Node.js headers.
+// Needs one native build first (`bun run build:native`), which downloads the Node.js headers.
 
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
@@ -27,7 +27,7 @@ if (!existsSync(nodeHeaders)) {
 
 const args = [
   '--quiet',
-  'src/userid.cc',
+  'native/userid.cc',
   '--',
   '-std=c++17',
   '-DNAPI_VERSION=8',

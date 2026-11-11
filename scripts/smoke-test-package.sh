@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
 # Install a packed tarball into a scratch project the way a user would, then check it works.
 #
-#   scripts/smoke-test-package.sh <userid-x.y.z.tgz> <npm|pnpm|bun> [--allow-build]
+#   scripts/smoke-test-package.sh <userid-x.y.z.tgz> <npm|pnpm|bun>
 #
-# Fails if the package had to be compiled on install, unless --allow-build: platforms with a
-# prebuilt binary must never need a compiler. Bun is the strictest case, because it doesn't run
-# a dependency's install script at all unless the user trusts it.
+# The package has no install scripts: it must work from its prebuilt binaries alone, with no
+# compiler and no build approval (pnpm 11+ fails an install that has unapproved build scripts).
 
 set -euo pipefail
 
 tarball="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 pm="$2"
-allow_build="${3:-}"
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 
 consumer="$(mktemp -d)"
@@ -31,12 +29,8 @@ echo "::endgroup::"
 pkg="$consumer/node_modules/userid"
 
 if [ -d "$pkg/build" ]; then
-  if [ "$allow_build" = "--allow-build" ]; then
-    echo "Built from source (allowed on this platform)"
-  else
-    echo "::error::userid was compiled on install; expected a prebuilt binary for $(node -p 'process.platform + "-" + process.arch')"
-    exit 1
-  fi
+  echo "::error::userid was compiled on install; it should only use its prebuilt binaries"
+  exit 1
 fi
 
 echo "::group::Resolve through the exports map"
@@ -50,4 +44,21 @@ echo "::endgroup::"
 echo "::group::Full test suite against the installed package"
 cd "$repo"
 USERID_PACKAGE_DIR="$pkg" node --test test/*.test.mts
+echo "::endgroup::"
+
+echo "::group::Without a prebuilt binary, loading fails with a clear error"
+# Pass paths as arguments, so Git Bash on Windows translates them for Node.js
+if [ "$(node -p 'require(process.argv[1]).isSupported' "$pkg")" = true ]; then
+  mv "$pkg/prebuilds" "$pkg/prebuilds.hidden"
+  # shellcheck disable=SC2016
+  code="$(node -e 'try { require(process.argv[1]); console.log("loaded") } catch (e) { console.log(e.code) }' "$pkg")"
+  mv "$pkg/prebuilds.hidden" "$pkg/prebuilds"
+  if [ "$code" != ERR_USERID_NO_PREBUILT_BINARY ]; then
+    echo "::error::expected ERR_USERID_NO_PREBUILT_BINARY, got $code"
+    exit 1
+  fi
+  echo "ok: $code"
+else
+  echo "skipped: unsupported platform"
+fi
 echo "::endgroup::"

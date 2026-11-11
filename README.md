@@ -15,17 +15,17 @@ bun add userid
 pnpm add userid
 ```
 
-Prebuilt binaries ship inside the package, so installing needs no compiler on:
+Prebuilt binaries ship inside the package. There is no install script: nothing compiles, and pnpm and Bun need no build approval.
 
-| Platform                                                  | Architectures     |
-| --------------------------------------------------------- | ----------------- |
-| Linux (glibc 2.31+: Debian 11, Ubuntu 20.04, RHEL 9, ...) | x64, arm64, armv7 |
-| Linux (musl: Alpine)                                      | x64, arm64        |
-| macOS 11+                                                 | arm64, x64        |
-| FreeBSD                                                   | x64               |
+| Platform                                                  | Architectures                     |
+| --------------------------------------------------------- | --------------------------------- |
+| Linux (glibc 2.31+: Debian 11, Ubuntu 20.04, RHEL 9, ...) | x64, arm64, armv7, ppc64le, s390x |
+| Linux (musl: Alpine)                                      | x64, arm64                        |
+| macOS 11+                                                 | arm64, x64                        |
+| FreeBSD                                                   | x64                               |
 
-Anywhere else, it builds from source on install, which needs a C++ toolchain and Python (see [node-gyp](https://github.com/nodejs/node-gyp#installation)).
-With Bun, that fallback only runs if you add `userid` to [`trustedDependencies`](https://bun.sh/docs/install/lifecycle).
+On any other platform, importing `userid` throws an error with `code: 'ERR_USERID_NO_PREBUILT_BINARY'`.
+[Open an issue](https://github.com/cinderblock/node-userid/issues) to ask for a prebuilt binary, or [build from source](#building-from-source).
 
 Requires Node.js 22.12 or newer. The binary uses [Node-API](https://nodejs.org/api/n-api.html), so it keeps working on new Node.js versions without a rebuild. It also loads in Bun.
 
@@ -67,17 +67,33 @@ Errors:
 Lookups are synchronous, and safe to call from several [worker threads](https://nodejs.org/api/worker_threads.html) at once.
 A lookup against a network directory can block, so keep that in mind on a busy event loop.
 
+## Building from source
+
+Needs a C++17 compiler, `make` and Python (see [node-gyp](https://github.com/nodejs/node-gyp#installation)), plus [Bun](https://bun.sh) or npm.
+
+```bash
+git clone https://github.com/cinderblock/node-userid.git
+cd node-userid
+bun install            # or: npm install
+bun run build          # compiles the binary into prebuilds/, and the TypeScript
+cd /path/to/your/project
+npm install /path/to/node-userid
+```
+
+The package then loads that binary like any other prebuilt one.
+
 ## Development
 
 ```bash
-bun install          # installs, builds the native addon (not on Windows) and compiles the TypeScript
+bun install          # installs and compiles the TypeScript
+bun run build:native # compiles the native addon from native/ into prebuilds/ (not on Windows)
 bun run test         # node:test, against `id`
 bun run check        # formatting, spelling, types, clang-tidy
 bun run check:package  # publint + are-the-types-wrong
 ```
 
 Tests run on Node.js directly, which strips the TypeScript types itself.
-On Windows, `bun install` skips the native build and the tests check the unsupported-platform behavior; use WSL for the rest.
+On Windows, skip `build:native`: the tests check the unsupported-platform behavior there. Use WSL for the rest.
 
 Optional test fixtures, which CI creates on Linux and FreeBSD:
 
@@ -87,7 +103,7 @@ Optional test fixtures, which CI creates on Linux and FreeBSD:
 | `BIG_ID_USERNAME`, `BIG_ID_GROUPNAME`, `BIG_ID` | a user and group with an id above 2³¹ (default `3000000000`)   |
 | `USERID_PACKAGE_DIR`                            | test an installed copy of the package instead of this checkout |
 
-`scripts/smoke-test-package.sh <tarball> <npm|pnpm|bun>` installs a packed tarball into a scratch project and runs the tests against it, failing if it had to compile.
+`scripts/smoke-test-package.sh <tarball> <npm|pnpm|bun>` installs a packed tarball into a scratch project and runs the tests against it. Run `bun run build` first.
 
 ## History
 

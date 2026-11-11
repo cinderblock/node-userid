@@ -31,6 +31,7 @@ jobs:
 
       - run: sudo apt-get install -y clang-tidy
       - run: bun install --frozen-lockfile
+      - run: bun run build:native
       - run: bun run format:check
       - run: bun run spelling
       - run: bun run typecheck
@@ -56,8 +57,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Install and build
-        run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
+      - run: bun run build:native
 
       - name: Create test users and groups
         if: runner.os == 'Linux'
@@ -110,6 +111,7 @@ jobs:
             pw useradd "$LONG_GROUPNAME_TEST"
           run: |
             npm install --no-audit --no-fund
+            npm run build:native
             npm test
 
   prebuild-linux:
@@ -125,6 +127,8 @@ jobs:
           - { name: linux-armv7-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye', platform: linux/arm/v7 }
           - { name: linux-x64-musl, runner: ubuntu-latest, image: 'node:22-alpine', apk: true }
           - { name: linux-arm64-musl, runner: ubuntu-24.04-arm, image: 'node:22-alpine', apk: true }
+          - { name: linux-ppc64-glibc, runner: ubuntu-latest, image: 'node:22-bullseye', platform: linux/ppc64le }
+          - { name: linux-s390x-glibc, runner: ubuntu-latest, image: 'node:22-bullseye', platform: linux/s390x }
 
     runs-on: ${{ matrix.runner }}
 
@@ -147,7 +151,7 @@ jobs:
         run: |
           docker run --rm ${PLATFORM:+--platform "$PLATFORM"} -v "$PWD:/repo" -w /repo "$IMAGE" sh -ec '
             if [ "$0" = true ]; then apk add --no-cache python3 make g++; fi
-            node node_modules/prebuildify/bin.js --napi --strip --tag-libc --tag-armv
+            npm run build:native
           ' "$APK"
           find prebuilds -type f -exec ls -l {} +
 
@@ -169,9 +173,9 @@ jobs:
           node-version: 22
 
       - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun run prebuildify --arch arm64
+      - run: bun run build:native --arch arm64
       - name: Cross-compile x64
-        run: bun run prebuildify --arch x64
+        run: bun run build:native --arch x64
       - run: find prebuilds -type f -exec file {} +
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -193,8 +197,8 @@ jobs:
         uses: vmactions/freebsd-vm@811efaaac0668df8bfb8308c3ec997b5ab50037b # v1.6.0
         with:
           usesh: true
-          prepare: pkg install -y node22 python3 gmake
-          run: node node_modules/prebuildify/bin.js --napi --strip
+          prepare: pkg install -y node22 npm-node22 python3 gmake
+          run: npm run build:native
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -294,10 +298,20 @@ jobs:
           docker run --rm -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:24-alpine \
             sh -ec 'apk add --no-cache bash >/dev/null && scripts/smoke-test-package.sh userid-*.tgz npm'
 
-  consumer-armv7:
-    name: Install with npm on linux-armv7 (emulated)
+  consumer-emulated:
+    name: Install with npm on ${{ matrix.platform }} (emulated)
     needs: pack
-    runs-on: ubuntu-24.04-arm
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Node.js 24 dropped official 32-bit ARM builds, so test with 22 (our oldest supported line)
+          - { platform: linux/arm/v7, runner: ubuntu-24.04-arm }
+          - { platform: linux/ppc64le, runner: ubuntu-latest }
+          - { platform: linux/s390x, runner: ubuntu-latest }
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -306,8 +320,9 @@ jobs:
           name: package
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
-      # Node.js 24 dropped official 32-bit ARM builds, so test with 22 (our oldest supported line)
-      - name: Install and test in node:22-bookworm-slim on arm/v7 (no compiler in the image)
+      - name: Install and test in node:22-bookworm-slim (no compiler in the image)
+        env:
+          PLATFORM: ${{ matrix.platform }}
         run: |
-          docker run --rm --platform linux/arm/v7 -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:22-bookworm-slim \
+          docker run --rm --platform "$PLATFORM" -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:22-bookworm-slim \
             bash -ec 'scripts/smoke-test-package.sh userid-*.tgz npm'

@@ -37,8 +37,24 @@ function load(): Native {
     throw error;
   }
 
-  // Finds a prebuilt binary in `prebuilds/`, or one built from source in `build/`
-  native ??= require('node-gyp-build')(join(__dirname, '..')) as Native;
+  if (!native) {
+    try {
+      // Finds the prebuilt binary for this platform in `prebuilds/`, or one built from source in `build/`
+      native = require('node-gyp-build')(join(__dirname, '..')) as Native;
+    } catch (cause) {
+      if (!(cause instanceof Error) || !cause.message.startsWith('No native build was found')) throw cause;
+
+      const error: NodeJS.ErrnoException = new Error(
+        `userid has no prebuilt binary for ${process.platform}-${process.arch}. ` +
+          'Build it from source (https://github.com/cinderblock/node-userid#building-from-source), ' +
+          'or ask for this platform at https://github.com/cinderblock/node-userid/issues',
+        { cause },
+      );
+      error.code = 'ERR_USERID_NO_PREBUILT_BINARY';
+      throw error;
+    }
+  }
+
   return native;
 }
 
