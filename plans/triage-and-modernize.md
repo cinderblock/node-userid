@@ -117,11 +117,11 @@
   - [x] PR #9 merged as `1dc988f` (2026-11-10). `master` requires an approving code-owner review, and the author can't approve their own PR, so it was an admin merge (`gh pr merge --admin`, user OK; `enforce_admins` is off).
   - [x] Tagged `v2.0.0` on `1dc988f` (user OK). [Release run 42939713843](https://github.com/cinderblock/node-userid/actions/runs/42939713843), attempt 1: the armv7 prebuild failed when node-gyp's header download from nodejs.org was cut off (`TypeError: terminated`, undici) under QEMU. A network flake: nothing was published. Re-ran the failed jobs; attempt 2 passed and published.
   - [x] **Published `userid@2.0.0`** as `latest` with SLSA provenance (17 files, 557 kB unpacked). Verified by installing it from the registry with npm, pnpm 12 and Bun in WSL: no build, CJS and ESM both work, big ids work.
-  - [ ] Follow-up: retry the native build in the prebuild jobs (or cache the headers), so a network blip can't fail a release
+  - [ ] Follow-up: retry the native build in the prebuild jobs (or cache the headers), so a network blip can't fail a release. **Handed to its own thread** (branch `ci-prebuild-retry`, 2026-11-10).
 - [x] Closed PR #8 with the credit comment the user approved (2026-11-10).
 - [x] Deleted branches (user OK, 2026-11-10). Tips, in case anything is needed: `thread-safe` `9b67784c61b9ffa861e18b272ded7a5858fbc8e6`, `no-MACOSX_DEPLOYMENT_TARGET` `89cfa86a0ea78331c0dafc990678457a75f4f419`, `test-no-MACOSX_DEPLOYMENT_TARGET` `2f1faac4e1f0dd43318abee060e4b245ce0e5a30`.
-- [ ] After 2.0: offer to lock down npm "Publishing access" (require 2FA, disallow tokens)
-- [ ] After 2.0: async (Promise) API (user said yes, as a follow-up)
+- [x] npm "Publishing access" locked down to require 2FA and disallow tokens (the user had already done it).
+- [ ] Async (Promise) API for 2.1. **Handed to its own thread** (branch `async-api`, 2026-11-10).
 
 ## Open questions for the user
 
