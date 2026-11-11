@@ -106,7 +106,7 @@
 - [x] `v1` merged into `modernize` (`9701c60`), so 2.0 builds on 1.3.0.
 - [x] **Published 1.3.0** (2026-11-10). The user configured trusted publishing (`cinderblock`/`node-userid`/`release.yml`/env `npm`, Allow npm publish checked, Allow npm dist-tag unchecked) and OK'd the tag. [Release run 42926720280](https://github.com/cinderblock/node-userid/actions/runs/42926720280). npm shows `latest: 1.3.0` with SLSA provenance. The registry took about 7½ minutes to show it after `+ userid@1.3.0` ("Your package is being processed").
 - [x] `master` fast-forwarded to `v1` (`96cba6e`), with the user's OK.
-- [ ] **Phase B: 2.0 on `modernize`** (current)
+- [x] **Phase B: 2.0 on `modernize`**
   - [x] Native rewrite, TypeScript wrapper, ESM + CJS, Windows behavior, node:test suite, Bun tooling: `26feba8`
   - [x] CI with prebuilds, a pack job, consumer installs, and a release that publishes the tested tarball: `39c7cfa`
   - [x] README + CHANGELOG for 2.0
@@ -114,10 +114,12 @@
   - [x] armv7, ppc64le and s390x consumer tests
   - [x] **CI fully green: 42/42 jobs** ([run 42937801476](https://github.com/cinderblock/node-userid/actions/runs/42937801476)), with dynamic libstdc++: a 190.7 kB tarball holding 10 binaries.
   - [x] Version 2.0.0 in package.json and CHANGELOG
-  - [ ] PR `modernize` → `master` (opened; merge needs the user's OK)
-  - [ ] After merge: the user OKs the `v2.0.0` tag, which publishes
-- [ ] Close PR #8 with credit (show the comment text first)
-- [ ] Delete salvaged branches `thread-safe`, `no-MACOSX_DEPLOYMENT_TARGET`, `test-no-MACOSX_DEPLOYMENT_TARGET` (needs user OK)
+  - [x] PR #9 merged as `1dc988f` (2026-11-10). `master` requires an approving code-owner review, and the author can't approve their own PR, so it was an admin merge (`gh pr merge --admin`, user OK; `enforce_admins` is off).
+  - [x] Tagged `v2.0.0` on `1dc988f` (user OK). [Release run 42939713843](https://github.com/cinderblock/node-userid/actions/runs/42939713843), attempt 1: the armv7 prebuild failed when node-gyp's header download from nodejs.org was cut off (`TypeError: terminated`, undici) under QEMU. A network flake: nothing was published. Re-ran the failed jobs; attempt 2 passed and published.
+  - [x] **Published `userid@2.0.0`** as `latest` with SLSA provenance (17 files, 557 kB unpacked). Verified by installing it from the registry with npm, pnpm 12 and Bun in WSL: no build, CJS and ESM both work, big ids work.
+  - [x] Follow-up: a network blip can't fail a release. Every building job now downloads the Node.js headers once on the runner, with retries and a checksum check, and node-gyp builds from that file with no network access; `ci-install-node.sh` retries too. No retry around the build itself. [PR #10](https://github.com/cinderblock/node-userid/pull/10), 42/42 green ([run 42945961856](https://github.com/cinderblock/node-userid/actions/runs/42945961856)), awaiting review/admin merge. Details: [ci-prebuild-network-resilience.md](ci-prebuild-network-resilience.md).
+- [x] Closed PR #8 with the credit comment the user approved (2026-11-10).
+- [x] Deleted branches (user OK, 2026-11-10). Tips, in case anything is needed: `thread-safe` `9b67784c61b9ffa861e18b272ded7a5858fbc8e6`, `no-MACOSX_DEPLOYMENT_TARGET` `89cfa86a0ea78331c0dafc990678457a75f4f419`, `test-no-MACOSX_DEPLOYMENT_TARGET` `2f1faac4e1f0dd43318abee060e4b245ce0e5a30`.
 - [ ] After 2.0: offer to lock down npm "Publishing access" (require 2FA, disallow tokens)
 - [ ] After 2.0: async (Promise) API (user said yes, as a follow-up)
 
