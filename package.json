@@ -50,8 +50,8 @@
   "gypfile": false,
   "scripts": {
     "prepare": "tsc -p tsconfig.build.json",
-    "build": "prebuildify --cwd native --out . --name userid --napi --strip --tag-libc --tag-armv && tsc -p tsconfig.build.json",
-    "build:native": "prebuildify --cwd native --out . --name userid --napi --strip --tag-libc --tag-armv",
+    "build": "prebuildify --target node@22.12.0 --cwd native --out . --name userid --napi --strip --tag-libc --tag-armv && tsc -p tsconfig.build.json",
+    "build:native": "prebuildify --target node@22.12.0 --cwd native --out . --name userid --napi --strip --tag-libc --tag-armv",
     "build:ts": "tsc -p tsconfig.build.json",
     "test": "node --test test/*.test.mts",
     "typecheck": "tsc -p tsconfig.json",
