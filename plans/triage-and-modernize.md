@@ -34,6 +34,14 @@
   - On Node 26, mocha 9 fails with `ReferenceError: require is not defined in ES module scope` from `node_modules/yargs/yargs`. Node 26 detects mocha 9's extensionless, old `yargs` file as ESM. It is **not** Node's TypeScript stripping: `--no-experimental-strip-types` doesn't help. Fixed with mocha 11.
   - The runner's clang-tidy errors inside node-addon-api 4.3's `napi.h` (`in-class initializer for static data member is not a constant expression`). Local clang-tidy 18 only warns. `.clang-tidy`'s `WarningsAsErrors: true` is not a glob, so it never failed on warnings anyway. A full run takes about 36 s per file because `src/.clang-tidy` enables `*`. clang-tidy was dropped from `v1` CI; 2.0 brings it back with a curated check list.
   - **Real bug, found by the new FreeBSD job:** `gids('root')` returned `[0, 0, 5]`. BSD `getgrouplist` always inserts the base gid and lists it again when the user is a member of it. Fixed on `v1` by deduping in order (`1f862ef`).
+- **2.0 CI findings (2026-11-10):**
+  - pnpm 11+ fails `pnpm add` with `ERR_PNPM_IGNORED_BUILDS` for any dependency that has an install script, or that ships `binding.gyp`. That led to the prebuilt-only design.
+  - Bun auto-builds a **root** project that has a `binding.gyp` and no install script, ignoring `gypfile: false`, so `bun install` on Windows failed (`grp.h: No such file or directory`). Fixed by moving the native build to `native/`.
+  - Docker image architectures (checked with `hub.docker.com/v2/repositories/library/<repo>/tags/<tag>` `.images[].architecture`): `node:22-bullseye` = amd64, arm/v7, arm64. `node:22-bookworm` adds ppc64le. **No Node image has s390x.** `debian:bullseye` has no ppc64le/s390x either; `ubuntu:20.04` has both, with glibc 2.31. Node 24 images have no arm/v7.
+  - prebuildify builds against the **newest** Node headers by default (26.0.0, `-std=gnu++20`), which gcc 9 on Ubuntu 20.04 rejects. Pinned with `--target node@22.12.0`. It keeps the headers in `$TMPDIR/prebuildify/node/<version>`, not node-gyp's cache (`scripts/clang-tidy.mjs` searches both).
+  - CI's clang-tidy is newer than local 18 and adds checks (`misc-const-correctness` misfires on the `*_r` out-param, so it's disabled).
+  - `macos-15-intel` runners exist; they run the darwin-x64 binary cross-compiled on arm64 fine.
+  - WSL wipes `/tmp` when its VM idles out between calls; build and lint in the same `wsl.exe` call.
 
 ## Triage
 
@@ -102,8 +110,11 @@
   - [x] CI with prebuilds, a pack job, consumer installs, and a release that publishes the tested tarball: `39c7cfa`
   - [x] README + CHANGELOG for 2.0
   - [x] **pnpm: prebuilt only** (user chose it on 2026-11-10). No install script; `binding.gyp` + sources moved to `native/` and not shipped; `ERR_USERID_NO_PREBUILT_BINARY` on platforms without a prebuild; ppc64le + s390x prebuilds added.
-  - [ ] armv7 consumer test on the Node 22 image (fix pushed; confirm on CI)
-  - [ ] Version bump to 2.0.0, then the user OKs the `v2.0.0` tag
+  - [x] armv7, ppc64le and s390x consumer tests
+  - [x] **CI fully green: 42/42 jobs** ([run 42935436981](https://github.com/cinderblock/node-userid/actions/runs/42935436981)). The tarball is 824 kB packed and 2.3 MB unpacked, with 10 binaries; most of that is libstdc++ statically linked into the Linux builds.
+  - [x] Version 2.0.0 in package.json and CHANGELOG
+  - [ ] PR `modernize` → `master` (opened; merge needs the user's OK)
+  - [ ] After merge: the user OKs the `v2.0.0` tag, which publishes
 - [ ] Close PR #8 with credit (show the comment text first)
 - [ ] Delete salvaged branches `thread-safe`, `no-MACOSX_DEPLOYMENT_TARGET`, `test-no-MACOSX_DEPLOYMENT_TARGET` (needs user OK)
 - [ ] After 2.0: offer to lock down npm "Publishing access" (require 2FA, disallow tokens)
