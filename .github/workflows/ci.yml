@@ -121,14 +121,29 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Debian 11 (glibc 2.31), so the binaries load on older distributions too
+          # Debian 11 (glibc 2.31), so the binaries load on older distributions too.
+          # ppc64le and s390x have no node:22-bullseye image, so they get Node.js from its official tarball.
           - { name: linux-x64-glibc, runner: ubuntu-latest, image: 'node:22-bullseye' }
           - { name: linux-arm64-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye' }
           - { name: linux-armv7-glibc, runner: ubuntu-24.04-arm, image: 'node:22-bullseye', platform: linux/arm/v7 }
-          - { name: linux-x64-musl, runner: ubuntu-latest, image: 'node:22-alpine', apk: true }
-          - { name: linux-arm64-musl, runner: ubuntu-24.04-arm, image: 'node:22-alpine', apk: true }
-          - { name: linux-ppc64-glibc, runner: ubuntu-latest, image: 'node:22-bullseye', platform: linux/ppc64le }
-          - { name: linux-s390x-glibc, runner: ubuntu-latest, image: 'node:22-bullseye', platform: linux/s390x }
+          - name: linux-ppc64-glibc
+            runner: ubuntu-latest
+            image: debian:bullseye
+            platform: linux/ppc64le
+            setup: sh scripts/ci-install-node.sh python3 make g++
+          - name: linux-s390x-glibc
+            runner: ubuntu-latest
+            image: debian:bullseye
+            platform: linux/s390x
+            setup: sh scripts/ci-install-node.sh python3 make g++
+          - name: linux-x64-musl
+            runner: ubuntu-latest
+            image: 'node:22-alpine'
+            setup: apk add --no-cache python3 make g++
+          - name: linux-arm64-musl
+            runner: ubuntu-24.04-arm
+            image: 'node:22-alpine'
+            setup: apk add --no-cache python3 make g++
 
     runs-on: ${{ matrix.runner }}
 
@@ -147,12 +162,10 @@ jobs:
         env:
           IMAGE: ${{ matrix.image }}
           PLATFORM: ${{ matrix.platform }}
-          APK: ${{ matrix.apk }}
+          SETUP: ${{ matrix.setup }}
         run: |
-          docker run --rm ${PLATFORM:+--platform "$PLATFORM"} -v "$PWD:/repo" -w /repo "$IMAGE" sh -ec '
-            if [ "$0" = true ]; then apk add --no-cache python3 make g++; fi
-            npm run build:native
-          ' "$APK"
+          docker run --rm ${PLATFORM:+--platform "$PLATFORM"} -v "$PWD:/repo" -w /repo "$IMAGE" \
+            sh -ec "${SETUP:+$SETUP && }npm run build:native"
           find prebuilds -type f -exec ls -l {} +
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -307,9 +320,13 @@ jobs:
       matrix:
         include:
           # Node.js 24 dropped official 32-bit ARM builds, so test with 22 (our oldest supported line)
-          - { platform: linux/arm/v7, runner: ubuntu-24.04-arm }
-          - { platform: linux/ppc64le, runner: ubuntu-latest }
-          - { platform: linux/s390x, runner: ubuntu-latest }
+          - { platform: linux/arm/v7, runner: ubuntu-24.04-arm, image: 'node:22-bookworm-slim' }
+          - { platform: linux/ppc64le, runner: ubuntu-latest, image: 'node:22-bookworm-slim' }
+          # There is no Node.js image for s390x
+          - platform: linux/s390x
+            runner: ubuntu-latest
+            image: debian:bookworm-slim
+            setup: sh scripts/ci-install-node.sh
 
     runs-on: ${{ matrix.runner }}
 
@@ -320,9 +337,11 @@ jobs:
           name: package
       - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
 
-      - name: Install and test in node:22-bookworm-slim (no compiler in the image)
+      - name: Install and test in ${{ matrix.image }} (no compiler in the image)
         env:
           PLATFORM: ${{ matrix.platform }}
+          IMAGE: ${{ matrix.image }}
+          SETUP: ${{ matrix.setup }}
         run: |
-          docker run --rm --platform "$PLATFORM" -v "$PWD:/repo" -w /repo -e FORCE_COLOR node:22-bookworm-slim \
-            bash -ec 'scripts/smoke-test-package.sh userid-*.tgz npm'
+          docker run --rm --platform "$PLATFORM" -v "$PWD:/repo" -w /repo -e FORCE_COLOR "$IMAGE" \
+            sh -ec "${SETUP:+$SETUP && }bash scripts/smoke-test-package.sh userid-*.tgz npm"

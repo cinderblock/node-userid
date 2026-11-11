@@ -2,9 +2,9 @@
 // Needs one native build first (`bun run build:native`), which downloads the Node.js headers.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { homedir, platform } from 'node:os';
+import { homedir, platform, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const require = createRequire(import.meta.url);
@@ -14,14 +14,23 @@ if (platform() === 'win32') {
   process.exit(0);
 }
 
-// node-gyp keeps the Node.js headers it built against in its cache
-const version = process.version.slice(1);
-const cache =
-  process.env.npm_config_devdir ?? join(homedir(), platform() === 'darwin' ? 'Library/Caches' : '.cache', 'node-gyp');
-const nodeHeaders = join(cache, version, 'include', 'node');
+// The Node.js headers the native build downloaded. prebuildify keeps its own copy, for a Node.js version it picks;
+// plain node-gyp uses its cache. Any version will do: only the Node-API headers are used, and those are stable.
+const caches = [
+  join(tmpdir(), 'prebuildify', 'node'),
+  process.env.npm_config_devdir,
+  join(homedir(), platform() === 'darwin' ? 'Library/Caches' : '.cache', 'node-gyp'),
+].filter(Boolean);
 
-if (!existsSync(nodeHeaders)) {
-  console.error(`clang-tidy: missing Node.js headers at ${nodeHeaders}. Run \`bun run build:native\` first.`);
+const nodeHeaders = caches
+  .flatMap(cache =>
+    existsSync(cache) ? readdirSync(cache).map(version => join(cache, version, 'include', 'node')) : [],
+  )
+  .find(dir => existsSync(join(dir, 'node_api.h')));
+
+if (!nodeHeaders) {
+  console.error(`clang-tidy: no Node.js headers found in:\n  ${caches.join('\n  ')}`);
+  console.error('Run `bun run build:native` first.');
   process.exit(1);
 }
 
