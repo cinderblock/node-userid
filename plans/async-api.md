@@ -63,12 +63,14 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 3. [x] JS wrappers, types, exports map.
 4. [x] Tests: async parity with sync (every case), concurrency, worker threads (incl. terminating a worker mid-lookup), async-hooks resource type, Windows rejections. Plus an event-loop test that interposes a slow `getpwnam_r` with `LD_PRELOAD` (Linux CI) to prove the loop keeps running.
 5. [x] Build + test in WSL; typecheck, lint, format, spelling, publint/attw. Windows tests. Tarball smoke test with npm, pnpm, Bun (and the Bun runtime).
-6. [ ] **Present the design to the user** (before README/CHANGELOG polish). ← current step. Draft PR open so CI runs meanwhile.
-7. [ ] README, CHANGELOG `2.1.0`, version bump.
-8. [ ] PR against `master`, CI fully green. **No merge, tag or publish** without the user's explicit OK.
+6. [x] **Present the design to the user.** Approved 2026-11-10.
+7. [x] README, CHANGELOG `2.1.0`, version bump. Merged `master` (PR #10, prebuild header retries) in first; clean.
+8. [ ] PR against `master`, CI fully green. ← current step. **No merge, tag or publish** without the user's explicit OK.
 
 ## Decisions already made (don't re-ask)
 
+- API shape: `userid/promises` plus `require('userid').promises`; no `*Async` functions (user approved).
+- No cancellation / `AbortSignal` (user approved).
 - Async API approved by the user as a follow-up to 2.0 (2026-11-09).
 - Release: minor, `2.1.0`. Merge needs an admin merge and the user's OK; release needs a `v2.1.0` tag and the user's OK.
 
@@ -83,13 +85,15 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 ## Progress log
 
 - [x] Implementation, tests, CI step, smoke test (2026-11-10).
-- [ ] User review of the design.
-- [ ] README, CHANGELOG 2.1.0, version bump.
+- [x] User approved the design: `userid/promises` + `.promises`, no `*Async`; no cancellation.
+- [x] README, CHANGELOG 2.1.0, version bump.
 - [x] CI green on [PR #11](https://github.com/cinderblock/node-userid/pull/11): all 42 checks on `1764c49` (2026-11-10). Re-run after the docs commit.
 
 ## Open questions for the user
 
-1. API shape: `userid/promises` + `promises` property (recommended), vs `*Async` functions, vs both.
+None. Waiting only on the user's OK to merge (admin merge) and to tag `v2.1.0`.
+
+Answered: API shape `userid/promises` + `promises` (approved); no cancellation (approved).
 
 ## Things not to do
 
