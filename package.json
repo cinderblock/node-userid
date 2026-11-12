@@ -1,6 +1,6 @@
 {
   "name": "userid",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Look up user and group ids and names in Node.js. Uses native POSIX bindings, not processes.",
   "keywords": [
     "uid",

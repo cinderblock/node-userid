@@ -64,8 +64,28 @@ Errors:
 - An id that isn't an integer from 0 to 4294967295: `RangeError`.
 - The system lookup itself failed (an unreachable LDAP server, say): an `Error` shaped like Node's own, e.g. `code: 'EIO'`, `syscall: 'getpwnam_r'`.
 
-Lookups are synchronous, and safe to call from several [worker threads](https://nodejs.org/api/worker_threads.html) at once.
-A lookup against a network directory can block, so keep that in mind on a busy event loop.
+Every function is safe to call from several [worker threads](https://nodejs.org/api/worker_threads.html) at once.
+
+### Promises
+
+A lookup against a network directory (LDAP, SSSD, NIS) can take a long time, and the functions above block the event loop while it runs.
+The same functions also come as promises, which run the lookup on the [libuv thread pool](https://docs.libuv.org/en/v1.x/threadpool.html) instead:
+
+```js
+import { ids, uid, gid, gids, username, groupname } from 'userid/promises';
+// or: const { promises } = require('userid');
+
+await ids('root'); // { uid: 0, gid: 0 }
+await username(0); // 'root'
+```
+
+They return the same values and fail with the same errors as the synchronous functions, except that every error is a rejected promise.
+That includes a bad argument (`TypeError`, `RangeError`), and `ERR_USERID_UNSUPPORTED_PLATFORM` on Windows: they never throw synchronously.
+
+A lookup can't be cancelled. The C library has no way to interrupt one, so it holds its thread until the system answers.
+If you need a deadline, race the lookup against a timer. The lookup itself keeps running in the background, and its thread stays busy until it finishes.
+That's the same tradeoff as [`dns.lookup()`](https://nodejs.org/api/dns.html#implementation-considerations), which shares the pool: libuv starts 4 threads, so a few hung lookups can stall `fs`, `dns.lookup()` and `crypto` too.
+If your directory might hang, raise [`UV_THREADPOOL_SIZE`](https://nodejs.org/api/cli.html#uv_threadpool_sizesize).
 
 ## Building from source
 
@@ -103,6 +123,13 @@ Optional test fixtures, which CI creates on Linux and FreeBSD:
 | `BIG_ID_USERNAME`, `BIG_ID_GROUPNAME`, `BIG_ID` | a user and group with an id above 2³¹ (default `3000000000`)   |
 | `USERID_PACKAGE_DIR`                            | test an installed copy of the package instead of this checkout |
 
+`test/event-loop.test.mts` checks that the promise API leaves the event loop free during a slow lookup. It needs a slow `getpwnam_r`, so it only runs with `USERID_SLOW_LOOKUP_MS` set and [`test/fixtures/slow-getpwnam.c`](test/fixtures/slow-getpwnam.c) preloaded (glibc Linux; CI runs it):
+
+```bash
+cc -shared -fPIC -o /tmp/slow-getpwnam.so test/fixtures/slow-getpwnam.c -ldl
+LD_PRELOAD=/tmp/slow-getpwnam.so USERID_SLOW_LOOKUP_MS=300 node --test test/event-loop.test.mts
+```
+
 `scripts/smoke-test-package.sh <tarball> <npm|pnpm|bun>` installs a packed tarball into a scratch project and runs the tests against it. Run `bun run build` first.
 
 ## History
@@ -116,7 +143,8 @@ Since Jen has not responded to any attempts at contact, I requested that Npm tra
 Version 1.0.0 switched to N-API, the forward compatible interface that should be, all around, much nicer moving forward.
 It also signals the change to using Github Actions to run all our full coverage tests on all supported platforms.
 
-Version 2.0.0 ships prebuilt binaries, TypeScript types, ES module and CommonJS entry points, and installs on Windows. See the [changelog](CHANGELOG.md).
+Version 2.0.0 ships prebuilt binaries, TypeScript types, ES module and CommonJS entry points, and installs on Windows.
+Version 2.1.0 adds the promise API. See the [changelog](CHANGELOG.md).
 The prebuild matrix started from [@matthewh](https://github.com/matthewh)'s [#8](https://github.com/cinderblock/node-userid/pull/8).
 
 ## Releasing
