@@ -1,7 +1,7 @@
 {
   "version": "0.1",
   "language": "en",
-  "ignorePaths": ["build/", "dist/", "prebuilds/", "node_modules/", "bun.lock"],
+  "ignorePaths": [".cache/", "build/", "dist/", "prebuilds/", "node_modules/", "bun.lock"],
   "words": [
     "addnab",
     "armv",
@@ -50,6 +50,7 @@
     "msvs",
     "Napi",
     "ngroups",
+    "nodedir",
     "npm's",
     "npmjs",
     "npmrc",
