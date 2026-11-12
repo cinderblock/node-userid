@@ -7,6 +7,6 @@ import userid from './index.cjs';
 
 export type { Ids } from './index.cjs';
 
-export const { isSupported, ids, uid, gid, gids, username, groupname } = userid;
+export const { isSupported, ids, uid, gid, gids, username, groupname, promises } = userid;
 
 export default userid;

@@ -84,6 +84,13 @@ jobs:
 
       - run: bun run test
 
+      # A getpwnam_r that takes 300 ms, like a slow LDAP server: the sync API must block the event loop, the promise API must not
+      - name: Event loop stays free during async lookups
+        if: runner.os == 'Linux'
+        run: |
+          cc -shared -fPIC -o "$RUNNER_TEMP/slow-getpwnam.so" test/fixtures/slow-getpwnam.c -ldl
+          LD_PRELOAD="$RUNNER_TEMP/slow-getpwnam.so" USERID_SLOW_LOOKUP_MS=300 node --test test/event-loop.test.mts
+
   windows:
     name: Windows (installs, every lookup throws)
     runs-on: windows-latest

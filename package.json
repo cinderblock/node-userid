@@ -1,6 +1,6 @@
 {
   "name": "userid",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Look up user and group ids and names in Node.js. Uses native POSIX bindings, not processes.",
   "keywords": [
     "uid",
@@ -35,6 +35,16 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
+      }
+    },
+    "./promises": {
+      "import": {
+        "types": "./dist/promises.d.mts",
+        "default": "./dist/promises.mjs"
+      },
+      "require": {
+        "types": "./dist/promises.d.cts",
+        "default": "./dist/promises.cjs"
       }
     },
     "./package.json": "./package.json"

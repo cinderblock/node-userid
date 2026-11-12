@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+
+- **Promise API**: `import { ids } from 'userid/promises'`, or `require('userid').promises` (like `fs/promises` and `fs.promises`). The same six functions, but each lookup runs on the libuv thread pool, so a slow user directory (LDAP, SSSD, NIS) no longer blocks the event loop. Results and errors are the same as the synchronous functions', but every error, including a bad argument or an unsupported platform, is a rejected promise. Lookups can't be cancelled; see the [README](README.md#promises).
+
 ## 2.0.0
 
 ### Added
