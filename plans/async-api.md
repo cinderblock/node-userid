@@ -65,7 +65,7 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 5. [x] Build + test in WSL; typecheck, lint, format, spelling, publint/attw. Windows tests. Tarball smoke test with npm, pnpm, Bun (and the Bun runtime).
 6. [x] **Present the design to the user.** Approved 2026-11-10.
 7. [x] README, CHANGELOG `2.1.0`, version bump. Merged `master` (PR #10, prebuild header retries) in first; clean.
-8. [x] PR against `master`, CI fully green (all 42 checks on `aefc6f1`, 2026-11-11). Next: the user's OK to admin-merge, then to tag `v2.1.0`. **No merge, tag or publish** without the user's explicit OK.
+8. [x] PR against `master`, CI fully green (all 42 checks on `aefc6f1`, 2026-11-11). **No merge, tag or publish** without the user's explicit OK.
 
 ## Decisions already made (don't re-ask)
 
@@ -76,6 +76,8 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 
 ## Findings / gotchas
 
+- 2.1.0's binaries are about twice 2.0.0's (linux-x64 glibc 52 → 93 kB; unpacked package 557 → 992 kB), from the five `AsyncWorker` instantiations and the promise plumbing. Still within `scripts/check-prebuilds.sh`'s glibc/GLIBCXX floor. Acceptable; a possible later trim (e.g. one type-erased worker) if size ever matters.
+
 - **Terminating a worker thread with async lookups in flight aborted the whole process** (`terminate called after throwing an instance of 'Napi::Error'`). The worker's environment is shutting down, so settling the promise fails, and node-addon-api's rethrow (`ThrowAsJavaScriptException` → `napi_throw` fails) escapes as a C++ exception. Fixed with node-addon-api's opt-in `NODE_API_SWALLOW_UNTHROWABLE_EXCEPTIONS` define in `native/binding.gyp`, which treats "can't throw because the environment is terminating" as a no-op. Covered by the test "can be terminated with lookups still in flight"; passed 15/15 repeated runs.
 - The `LD_PRELOAD` slow-lookup test works: with a 300 ms `getpwnam_r`, the sync lookup lets a 10 ms interval fire 0 times; the async lookup lets it fire normally; 4 parallel async lookups finish in about 300 ms total (pool of 4).
 - The promise API works unchanged in the Bun runtime (Bun 1.4.2), including 200 concurrent lookups.
@@ -84,6 +86,8 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 
 ## Progress log
 
+- [x] **Released 2.1.0** (2026-11-11, user OK). PR #11 admin-merged as `61f7c36`; tagged `v2.1.0`; [release run 43159074996](https://github.com/cinderblock/node-userid/actions/runs/43159074996) green. npm `latest: 2.1.0` with SLSA provenance. Verified by installing from the registry with npm, pnpm and Bun in WSL: no build; ESM, CJS and the Bun runtime all work; big ids resolve.
+
 - [x] Implementation, tests, CI step, smoke test (2026-11-10).
 - [x] User approved the design: `userid/promises` + `.promises`, no `*Async`; no cancellation.
 - [x] README, CHANGELOG 2.1.0, version bump.
@@ -91,7 +95,7 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 
 ## Open questions for the user
 
-None. Waiting only on the user's OK to merge (admin merge) and to tag `v2.1.0`.
+None.
 
 Answered: API shape `userid/promises` + `promises` (approved); no cancellation (approved).
 
