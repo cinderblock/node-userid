@@ -65,7 +65,7 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 5. [x] Build + test in WSL; typecheck, lint, format, spelling, publint/attw. Windows tests. Tarball smoke test with npm, pnpm, Bun (and the Bun runtime).
 6. [x] **Present the design to the user.** Approved 2026-11-10.
 7. [x] README, CHANGELOG `2.1.0`, version bump. Merged `master` (PR #10, prebuild header retries) in first; clean.
-8. [ ] PR against `master`, CI fully green. ← current step. **No merge, tag or publish** without the user's explicit OK.
+8. [x] PR against `master`, CI fully green (all 42 checks on `aefc6f1`, 2026-11-11). Next: the user's OK to admin-merge, then to tag `v2.1.0`. **No merge, tag or publish** without the user's explicit OK.
 
 ## Decisions already made (don't re-ask)
 
@@ -87,7 +87,7 @@ Each pending lookup occupies one libuv pool thread (4 by default, shared with `f
 - [x] Implementation, tests, CI step, smoke test (2026-11-10).
 - [x] User approved the design: `userid/promises` + `.promises`, no `*Async`; no cancellation.
 - [x] README, CHANGELOG 2.1.0, version bump.
-- [x] CI green on [PR #11](https://github.com/cinderblock/node-userid/pull/11): all 42 checks on `1764c49` (2026-11-10). Re-run after the docs commit.
+- [x] CI green on [PR #11](https://github.com/cinderblock/node-userid/pull/11): all 42 checks on `1764c49` (2026-11-10). Re-run after the docs commit: all 42 green on `aefc6f1`.
 
 ## Open questions for the user
 
